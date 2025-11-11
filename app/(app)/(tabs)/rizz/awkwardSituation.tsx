@@ -5,41 +5,45 @@ import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
 import {
   StyleSheet,
-  useColorScheme,
-  TextInput,
   Pressable,
   Alert,
   ActivityIndicator,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics'; // --- 1. Importar Haptics ---
 
-// --- API Configuration ---
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
-const MAX_PROMPT_LENGTH = 600;
-const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant']; // Tones constant
+const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant', 'Spicy'];
 
-export default function AwkwardSituationScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const styles = getStyles(colorScheme);
-  const tintColor = Colors[colorScheme].tint;
+const theme = 'dark';
+const themeColors = Colors[theme];
 
-  const [prompt, setPrompt] = useState('');
+export default function PickupLinesScreen() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
   const [selectedTone, setSelectedTone] = useState(TONES[0]);
 
-  // Image picker functionality removed for this screen
-
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
+    // --- 2. Añadir Haptic de Éxito ---
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert('Copied!', 'The text has been copied to your clipboard.');
   };
 
+  // --- NUEVO: Función para manejar el Tono con Haptic ---
+  const handleToneSelect = (tone: string) => {
+    // --- 4. Añadir Haptic Ligero ---
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedTone(tone);
+  }
+
   const handleGenerateRizz = async () => {
+    // --- 3. Añadir Haptic de Impacto ---
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     if (!GEMINI_API_KEY) {
       Alert.alert(
         'API Key Missing',
@@ -48,34 +52,28 @@ export default function AwkwardSituationScreen() {
       return;
     }
 
-    if (!prompt.trim()) {
-      Alert.alert('Input Required', 'Please describe the awkward situation.');
-      return;
-    }
-
     setLoading(true);
     setResults([]);
 
-    // --- UPDATED: System prompt for "Awkward Situations" ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
-    Your goal is to generate 3-4 short, actionable pieces of advice or specific phrases to help the user navigate an awkward social situation they describe.
-    Your tone MUST be: ${selectedTone}.
-    The user will provide text describing the situation. Give them clear, concise ways to handle it or escape it smoothly.
+    Your goal is to generate 3-4 creative "Banger Pickup Lines".
+    Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
+    The user is not providing any context other than the tone, so be creative.
 
     --- STRICT RULES (MANDATORY) ---
-    1.  **DO NOT** include any greetings, salutations, commentary, or preambles (e.g., "Hello!", "Sure!", "Here are some options:").
-    2.  Your response **MUST ONLY** contain the list of 3-4 suggestions.
-    3.  Each suggestion **MUST** be on a new line.
-    4.  **ONLY** provide advice related to the user's social situation.
-    5.  **DO NOT** answer general questions (like math, history, science, coding, trivia, etc.).
-    6.  **DO NOT** write poems, stories, code, essays, or any long-form content.
-    7.  **DO NOT** respond to requests to generate images.
-    8.  If the user asks for anything other than social advice, you **MUST** politely refuse and redirect them to the app's purpose.
-        Example refusal: "My purpose is to help you handle awkward situations, so I can't help with that. Let's focus on your situation!"`;
+    1.  Your response **MUST ONLY** contain the list of 3-4 pickup lines.
+    2.  Each line **MUST** be on a new line.
+    3.  **DO NOT** include *ANY* text other than the lines themselves.
+    4.  **DO NOT** include greetings, salutations, commentary, apologies, or preambles (e.g., "Hello!", "Sure!", "Here are some options:").
+    5.  Start the response *immediately* with the first pickup line.
+    6.  **ONLY** provide pickup lines.
+    7.  **DO NOT** answer general questions (like math, history, science, coding, trivia, etc.).
+    8.  **DO NOT** write poems, stories, code, essays, or any long-form content.
+    9.  **DO NOT** respond to requests to generate images.
+    10. If the user asks for anything other than pickup lines, you **MUST** politely refuse and redirect them to the app's purpose.
+        Example refusal: "My purpose is to generate pickup lines, so I can't help with that. Let's get you some lines!"`;
 
-    const parts = [{ text: `Awkward Situation: "${prompt}"` }];
-
-    // Image parts removed
+    const parts = [{ text: `Generate pickup lines.` }];
 
     try {
       const payload = {
@@ -121,224 +119,199 @@ export default function AwkwardSituationScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-        keyboardVerticalOffset={80}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Upload Button and Image Preview Removed */}
+        <Text style={styles.subtitle}>
+          Select a tone and get 3-4 banger pickup lines.
+        </Text>
 
-          <Text style={styles.subtitle}>
-            Describe the awkward situation you need help with:
-          </Text>
-
-          <View style={styles.textInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="e.g., 'I forgot someone's name right after they told me', 'I ran into my ex with her new partner', 'Accidentally sent a text to the wrong person...'"
-              placeholderTextColor={Colors[colorScheme].icon}
-              multiline
-              value={prompt}
-              onChangeText={setPrompt}
-              maxLength={MAX_PROMPT_LENGTH}
-            />
-            <Text style={styles.charCounter}>
-              {MAX_PROMPT_LENGTH - prompt.length} / {MAX_PROMPT_LENGTH}
-            </Text>
-          </View>
-
-          <View style={styles.tonalityContainer}>
-            <Text style={styles.tonalityLabel}>Tonality</Text>
-            <View style={styles.toneButtonRow}>
-              {TONES.map((tone) => (
-                <Pressable
-                  key={tone}
+        <View style={styles.tonalityContainer}>
+          <Text style={styles.tonalityLabel}>Tonality</Text>
+          <View style={styles.toneButtonRow}>
+            {TONES.map((tone) => (
+              <Pressable
+                key={tone}
+                style={[
+                  styles.toneButton,
+                  selectedTone === tone && styles.toneButtonActive,
+                ]}
+                // --- CAMBIO: Usar la nueva función con Haptic ---
+                onPress={() => handleToneSelect(tone)}>
+                <Text
                   style={[
-                    styles.toneButton,
-                    selectedTone === tone && styles.toneButtonActive,
-                  ]}
-                  onPress={() => setSelectedTone(tone)}>
-                  <Text
-                    style={[
-                      styles.toneButtonText,
-                      selectedTone === tone && styles.toneButtonTextActive,
-                    ]}>
-                    {tone}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+                    styles.toneButtonText,
+                    selectedTone === tone && styles.toneButtonTextActive,
+                  ]}>
+                  {tone}
+                </Text>
+              </Pressable>
+            ))}
           </View>
+        </View>
 
-          <Pressable
-            style={[styles.button, { backgroundColor: tintColor }]}
-            onPress={handleGenerateRizz}
-            disabled={loading}>
+        {/* --- Botón Generate Lines con Gradiente --- */}
+        <Pressable
+          style={styles.buttonWrapper}
+          onPress={handleGenerateRizz}
+          disabled={loading}>
+          <LinearGradient
+            colors={[themeColors.tint, themeColors.secondary]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.buttonGradient}>
             <Ionicons name="sparkles-outline" size={20} color="white" />
             <Text style={styles.buttonText}>
-              {loading ? 'Generating...' : 'Get Advice'}
+              {loading ? 'Generating...' : 'Generate Lines'}
             </Text>
-          </Pressable>
+          </LinearGradient>
+        </Pressable>
 
-          {loading && (
-            <ActivityIndicator
-              size="large"
-              color={tintColor}
-              style={styles.loading}
-            />
-          )}
+        {loading && (
+          <ActivityIndicator
+            size="large"
+            color={themeColors.tint}
+            style={styles.loading}
+          />
+        )}
 
-          {results.length > 0 && (
-            <View style={styles.resultContainer}>
-              {results.map((line, index) => (
-                <Pressable
-                  key={index}
-                  style={styles.pillResult}
-                  onPress={() => copyToClipboard(line)}>
-                  <Text style={styles.pillResultText}>{line}</Text>
-                  <Ionicons
-                    name="copy-outline"
-                    size={18}
-                    color={tintColor}
-                  />
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+        {results.length > 0 && (
+          <View style={styles.resultContainer}>
+            {results.map((line, index) => (
+              <Pressable
+                key={index}
+                style={styles.pillResult}
+                onPress={() => copyToClipboard(line)}>
+                <Text style={styles.pillResultText}>{line}</Text>
+                <Ionicons
+                  name="copy-outline"
+                  size={18}
+                  color={themeColors.tint}
+                />
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const getStyles = (theme: 'light' | 'dark') =>
-  StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: Colors[theme].background,
-    },
-    keyboardAvoidingView: {
-      flex: 1,
-    },
-    container: {
-      flex: 1,
-      padding: 20,
-    },
-    scrollContainer: {
-      flexGrow: 1,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: Colors[theme].icon,
-      marginBottom: 15,
-      textAlign: 'center',
-    },
-    textInputContainer: {
-      marginBottom: 20,
-      backgroundColor: Colors[theme].card,
-      borderColor: Colors[theme].border,
-      borderWidth: 1,
-      borderRadius: 12,
-    },
-    textInput: {
-      padding: 15,
-      fontSize: 16,
-      color: Colors[theme].text,
-      minHeight: 120,
-      textAlignVertical: 'top',
-    },
-    charCounter: {
-      fontSize: 12,
-      color: Colors[theme].icon,
-      textAlign: 'right',
-      paddingHorizontal: 15,
-      paddingBottom: 10,
-    },
-    tonalityContainer: {
-      marginBottom: 20,
-    },
-    tonalityLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: Colors[theme].text,
-      textAlign: 'center',
-      marginBottom: 10,
-    },
-    toneButtonRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      flexWrap: 'wrap',
-    },
-    toneButton: {
-      backgroundColor: Colors[theme].card,
-      borderColor: Colors[theme].border,
-      borderWidth: 1,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 99,
-      margin: 4,
-    },
-    toneButtonActive: {
-      backgroundColor: Colors[theme].tint,
-      borderColor: Colors[theme].tint,
-    },
-    toneButtonText: {
-      fontSize: 14,
-      color: Colors[theme].text,
-    },
-    toneButtonTextActive: {
-      color: '#FFFFFF',
-      fontWeight: 'bold',
-    },
-    button: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 15,
-      borderRadius: 99, // Pill shape
-      width: '100%',
-    },
-    buttonText: {
-      color: 'white',
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginLeft: 10,
-    },
-    loading: {
-      marginTop: 30,
-    },
-    resultContainer: {
-      marginTop: 20,
-      marginBottom: 50, // Add space at the bottom
-    },
-    pillResult: {
-      backgroundColor: Colors[theme].card,
-      borderRadius: 12,
-      paddingVertical: 15,
-      paddingHorizontal: 20,
-      borderColor: Colors[theme].border,
-      borderWidth: 1,
-      marginBottom: 10,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 1,
-    },
-    pillResultText: {
-      fontSize: 16,
-      color: Colors[theme].text,
-      lineHeight: 24,
-      flex: 1, // Ensure text wraps
-      marginRight: 10, // Space before copy icon
-    },
-    // Styles for upload button and image preview are removed
-  });
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: themeColors.background,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  scrollContainer: {
+    // --- CORRECCIÓN: flexGrow eliminado, paddingBottom añadido ---
+    paddingBottom: 100,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: themeColors.icon,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  tonalityContainer: {
+    marginBottom: 20,
+  },
+  tonalityLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.text,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  toneButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+  },
+  toneButton: {
+    backgroundColor: themeColors.card,
+    borderColor: themeColors.border,
+    borderWidth: 1.5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 99,
+    margin: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  toneButtonActive: {
+    backgroundColor: themeColors.tint,
+    borderColor: themeColors.tint,
+  },
+  toneButtonText: {
+    fontSize: 14,
+    color: themeColors.text,
+  },
+  toneButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  buttonWrapper: {
+    width: '100%',
+    borderRadius: 12,
+    marginTop: 10,
+    shadowColor: themeColors.tint, // Sombra de color
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    marginBottom: 15, // Espacio entre botones
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    width: '100%',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  loading: {
+    marginTop: 30,
+  },
+  resultContainer: {
+    marginTop: 20,
+  },
+  pillResult: {
+    backgroundColor: themeColors.card,
+    borderRadius: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  pillResultText: {
+    fontSize: 16,
+    color: themeColors.text,
+    lineHeight: 24,
+    flex: 1,
+    marginRight: 10,
+  },
+});

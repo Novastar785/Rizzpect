@@ -1,14 +1,17 @@
 import { StyleSheet, Pressable } from 'react-native';
-import { supabase } from '@/lib/supabase'; // <<-- CORRECCIÓN APLICADA AQUÍ
+import { supabase } from '@/lib/supabase';
 
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// Forzamos el tema oscuro
+const theme = 'dark';
+const themeColors = Colors[theme];
+
 export default function ProfileScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const themeColors = Colors[colorScheme];
+  const styles = getStyles(theme);
 
   // Función para cerrar sesión
   const handleLogout = async () => {
@@ -18,23 +21,27 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: themeColors.background }]}>
-      <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-        <Text style={[styles.title, { color: themeColors.text }]}>My Profile</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.title}>My Profile</Text>
 
         {/* Contenido de Perfil (Placeholder) */}
         <View style={styles.content}>
-            <Text style={[styles.infoText, { color: themeColors.text }]}>
-                Tu información de usuario y configuraciones se mostrarán aquí.
-            </Text>
+          {/* --- CAMBIO: Texto traducido a inglés --- */}
+          <Text style={styles.infoText}>
+            Your user information and settings will be displayed here.
+          </Text>
         </View>
 
         {/* --- Botón de Cerrar Sesión --- */}
-        <Pressable 
+        <Pressable
           onPress={handleLogout}
           style={({ pressed }) => [
             styles.logoutButton,
-            { opacity: pressed ? 0.7 : 1 }
+            { 
+              backgroundColor: themeColors.accentRed, // Usamos el color rojo pasión
+              opacity: pressed ? 0.7 : 1 
+            }
           ]}
         >
           <Text style={styles.logoutButtonText}>Sign Out</Text>
@@ -44,40 +51,50 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-    },
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 30,
-        textAlign: 'center',
-    },
-    content: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    infoText: {
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    logoutButton: {
-        backgroundColor: '#FF3B30', // Rojo para la acción de salir
-        padding: 15,
-        borderRadius: 10,
-        width: '100%',
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    logoutButtonText: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+const getStyles = (theme: 'light' | 'dark') => StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: themeColors.background,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: themeColors.background,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+    color: themeColors.text,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: themeColors.icon, // Color de ícono (gris claro)
+  },
+  logoutButton: {
+    // El color de fondo se aplica arriba
+    padding: 15,
+    borderRadius: 12, // Redondeado
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+    // --- NUEVA SOMBRA ---
+    shadowColor: themeColors.accentRed,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });

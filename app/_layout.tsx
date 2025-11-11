@@ -10,15 +10,18 @@ import * as SystemUI from 'expo-system-ui';
 
 SplashScreen.preventAutoHideAsync();
 
+// Forzamos el tema oscuro desde el inicio
+const appTheme = Colors.dark;
+
 export default function RootLayout() {
   useEffect(() => {
     async function initApp() {
-      // --- ¡NUEVO CAMBIO! ---
+      // --- ¡CAMBIO APLICADO! ---
       // 1. Hacemos que la app sea "edge-to-edge"
       // Le decimos a la barra de Android que sea transparente
-      // y que use nuestro color de fondo (blanco).
+      // y que use nuestro color de fondo (oscuro).
       if (Platform.OS === 'android') {
-        SystemUI.setBackgroundColorAsync(Colors.light.background);
+        SystemUI.setBackgroundColorAsync(appTheme.background); // <-- Forzamos el fondo oscuro
       }
       // --- FIN DEL CAMBIO ---
 

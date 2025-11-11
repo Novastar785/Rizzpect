@@ -1,51 +1,144 @@
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
-import React from 'react';
-import { StyleSheet, useColorScheme, ScrollView, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, useColorScheme, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '@/lib/supabase'; // Para el fulfillment
 
-// --- Tipos definidos para corregir el error de TypeScript ---
+// NOTA IMPORTANTE: Para que este código funcione, debes instalar:
+// npx expo install expo-in-app-purchases
+
+// --- Tipos definidos ---
 type ThemeKey = 'light' | 'dark';
-type Product = {
+
+// El tipo de Producto REAL de Expo
+type ExpoProduct = {
+    productId: string;
+    title: string;
+    price: string; // Ejemplo: "$0.99"
+    description: string;
+    // Otros campos como isSubscription, localizedPrice, etc.
+};
+
+// Nuestra definición de Producto para renderizar
+type ProductDefinition = {
     id: string;
     flow?: number;
     name?: string;
-    price: string;
     tag?: string;
     benefit?: string;
-    icon?: any; // Usamos 'any' para el nombre del icono de Ionicons
+    icon?: any;
+    isSubscription: boolean;
+    // Campo para guardar los datos reales del store
+    storeDetails: ExpoProduct | null; 
 };
-// -----------------------------------------------------------
+// -----------------------
 
-// --- Product Definitions (CORREGIDO) ---
-const CREDIT_PACKS: Product[] = [
-  { id: 'rizz_5', flow: 5, price: '0.99', tag: 'Starter' },
-  { id: 'rizz_35', flow: 35, price: '3.99', tag: 'Best Value' },
-  { id: 'rizz_70', flow: 70, price: '6.99', tag: 'Bulk Buy' },
+// --- Product IDs que debes registrar en App Store Connect y Google Play Console ---
+const PRODUCT_IDS = [
+    'rizz_5',        // Consumible
+    'rizz_35',       // Consumible
+    'rizz_70',       // Consumible
+    'pro_weekly',    // Suscripción
+    'monster_monthly', // Suscripción
+    'premium_yearly',  // Suscripción
 ];
 
-const SUBSCRIPTIONS: Product[] = [
-  { id: 'pro_weekly', name: 'Weekly Pro Access', price: '9.99', benefit: 'Unlimited Interactions', icon: 'flash-outline' },
-  { id: 'monster_monthly', name: 'Monthly Monster Access', price: '29.99', benefit: 'Unlimited Interactions + Priority', icon: 'flame-outline' },
-  // --- CAMBIO APLICADO AQUÍ ---
-  { id: 'premium_yearly', name: 'Yearly Premium Access', price: '299.99', benefit: 'VIP Full Access', icon: 'sparkles' },
+// --- Definiciones Lógicas ---
+const DEFINITIONS: ProductDefinition[] = [
+    // Packs de Créditos
+    { id: 'rizz_5', flow: 5, tag: 'Starter', isSubscription: false, storeDetails: null },
+    { id: 'rizz_35', flow: 35, tag: 'Best Value', isSubscription: false, storeDetails: null },
+    { id: 'rizz_70', flow: 70, tag: 'Bulk Buy', isSubscription: false, storeDetails: null },
+    // Suscripciones
+    { id: 'pro_weekly', name: 'Weekly Pro Access', benefit: 'Unlimited Interactions', icon: 'flash-outline', isSubscription: true, storeDetails: null },
+    { id: 'monster_monthly', name: 'Monthly Monster Access', benefit: 'Unlimited Interactions + Priority', icon: 'flame-outline', isSubscription: true, storeDetails: null },
+    { id: 'premium_yearly', name: 'Yearly Premium Access', benefit: 'VIP Full Access', icon: 'sparkles', isSubscription: true, storeDetails: null },
 ];
 // -----------------------------
 
-// --- Componente tipado correctamente ---
-const ProductCard = ({ product, theme, isSubscription }: { product: Product, theme: ThemeKey, isSubscription: boolean }) => {
+/**
+ * Función (placeholder) para el Fulfillment:
+ * ESTO DEBE HACERSE EN TU BACKEND (SUPABASE EDGE FUNCTION) POR SEGURIDAD.
+ */
+const fulfillPurchase = async (purchase: any, isSubscription: boolean) => {
+    // 1. Obtener el recibo (receipt) de la compra de Expo
+    const receipt = JSON.stringify(purchase);
+    
+    try {
+        // 2. ENVIAR EL RECIBO A UN ENDPOINT SEGURO (Supabase Edge Function)
+        // Este endpoint es el único que debe hablar con las APIs de Apple/Google
+        // para verificar que el pago es 100% legítimo.
+        const { data, error } = await supabase.functions.invoke('verify-iap', {
+            body: {
+                receipt,
+                platform: 'ios' // o 'android', dependiendo de la plataforma
+            }
+        });
+
+        if (error) throw new Error(error.message);
+
+        // 3. Si la verificación es exitosa, el backend actualiza los créditos del usuario en la BD.
+        Alert.alert("Success", `Purchase verified and ${isSubscription ? 'access granted' : 'credits added'}!`);
+
+    } catch (error: any) {
+        console.error("Fulfillment Error:", error);
+        Alert.alert("Error", "Could not verify purchase. Contact support.");
+    }
+};
+
+
+// --- Lógica REAL de Compra IAP ---
+const handlePurchase = async (product: ProductDefinition) => {
+    if (!product.storeDetails) {
+        return Alert.alert("Error", "Product details not loaded yet.");
+    }
+    
+    // Inicia el proceso de compra de la tienda
+    try {
+        // ** INTEGRACIÓN REAL DE EXPO IAP **
+        // const purchase = await InAppPurchases.purchaseItemAsync(product.id);
+        
+        // ** SIMULACIÓN DE ÉXITO para la estructura **
+        const purchase = { productId: product.id, receipt: "FAKE_RECEIPT_DATA..." }; 
+        
+        if (purchase) {
+            // Llama a la función de cumplimiento con el objeto de compra
+            await fulfillPurchase(purchase, product.isSubscription);
+        }
+
+    } catch (error) {
+        console.error("Purchase Error:", error);
+        Alert.alert("Purchase Failed", "Could not complete the transaction.");
+    }
+};
+// ---------------------------------
+
+
+const ProductCard = ({ product, theme }: { product: ProductDefinition, theme: ThemeKey }) => {
   const styles = getStyles(theme);
   const tintColor = Colors[theme].tint;
+  
+  const title = product.isSubscription ? product.name : `${product.flow} Rizzflow Credits`;
+  const subtitle = product.isSubscription ? product.benefit : `Pay-as-you-go interactions`;
 
-  const title = isSubscription ? product.name : `${product.flow} Rizzflow Credits`;
-  const subtitle = isSubscription ? product.benefit : `Pay-as-you-go interactions`;
+  // Muestra el precio real del store, si está disponible
+  const priceDisplay = product.storeDetails ? product.storeDetails.price : '...';
 
   return (
-    <Pressable style={styles.cardContainer}>
-      <View style={[styles.card, { backgroundColor: Colors[theme].card, borderColor: isSubscription ? tintColor : Colors[theme].border }]}>
+    <Pressable 
+        style={styles.cardContainer}
+        onPress={() => product.storeDetails && handlePurchase(product)} // Solo activo si los detalles están cargados
+        disabled={!product.storeDetails}
+    >
+      <View style={[styles.card, { 
+          backgroundColor: Colors[theme].card, 
+          borderColor: product.isSubscription ? tintColor : Colors[theme].border,
+          opacity: product.storeDetails ? 1 : 0.6 // Opacidad si no está cargado
+      }]}>
         <View style={styles.cardHeader}>
-          {isSubscription && product.icon && <Ionicons name={product.icon} size={24} color={tintColor} />}
+          {product.isSubscription && product.icon && <Ionicons name={product.icon} size={24} color={tintColor} />}
           <Text style={[styles.cardTitle, { color: Colors[theme].text }]}>{title}</Text>
         </View>
         
@@ -54,7 +147,7 @@ const ProductCard = ({ product, theme, isSubscription }: { product: Product, the
         </Text>
 
         <Text style={[styles.priceText, { color: tintColor }]}>
-          ${product.price}
+          {priceDisplay}
         </Text>
         
         {product.tag && (
@@ -66,12 +159,73 @@ const ProductCard = ({ product, theme, isSubscription }: { product: Product, the
     </Pressable>
   );
 };
-// ----------------------------------------
+
 
 export default function StoreScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const styles = getStyles(colorScheme);
   const tintColor = Colors[colorScheme].tint;
+  
+  // Estado para los productos con los detalles reales del store
+  const [products, setProducts] = useState<ProductDefinition[]>(DEFINITIONS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadIAP = async () => {
+        setLoading(true);
+        // ** Lógica real: Inicializar IAP y obtener detalles **
+        
+        // 1. Inicializar la conexión
+        // await InAppPurchases.connectAsync();
+        
+        // 2. Obtener productos de las tiendas
+        // const { responseCode, results } = await InAppPurchases.getProductsAsync(PRODUCT_IDS);
+        
+        // ** SIMULACIÓN DE DATOS CARGADOS (Reemplazar con Expo IAP) **
+        const results: ExpoProduct[] = [
+            { productId: 'rizz_5', title: '5 Rizzflows', price: '$0.99', description: '' },
+            { productId: 'rizz_35', title: '35 Rizzflows', price: '$3.99', description: '' },
+            { productId: 'rizz_70', title: '70 Rizzflows', price: '$6.99', description: '' },
+            { productId: 'pro_weekly', title: 'Weekly Pro Access', price: '$9.99', description: '' },
+            { productId: 'monster_monthly', title: 'Monthly Monster Access', price: '$29.99', description: '' },
+            { productId: 'premium_yearly', title: 'Yearly Premium Access', price: '$299.99', description: '' },
+        ];
+        // ** FIN SIMULACIÓN **
+
+        if (results && results.length > 0) {
+            setProducts(prev => 
+                prev.map(p => {
+                    const storeData = results.find(r => r.productId === p.id);
+                    return storeData ? { ...p, storeDetails: storeData } : p;
+                })
+            );
+        } else {
+            Alert.alert("Error", "Could not load store products. Check IDs and app configuration.");
+        }
+
+        // 3. Configurar el listener de compras (Para pagos asíncronos)
+        // const listener = InAppPurchases.setPurchaseListener(({ responseCode, results, cancelled, error }) => {
+        //     if (responseCode === InAppPurchases.IAPResponseCode.OK) {
+        //         results.forEach(purchase => {
+        //             if (purchase.acknowledged) return; // Ya procesado
+        //             fulfillPurchase(purchase, purchase.type === 'Subscription');
+        //             InAppPurchases.finishTransactionAsync(purchase, true); // Finalizar transacción
+        //         });
+        //     }
+        // });
+
+        setLoading(false);
+        
+        // Cleanup function for the listener
+        // return () => InAppPurchases.removePurchaseListener(listener);
+    };
+
+    loadIAP();
+  }, []); // Se ejecuta solo una vez al montar
+
+  const creditPacks = products.filter(p => !p.isSubscription);
+  const subscriptions = products.filter(p => p.isSubscription);
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -86,21 +240,33 @@ export default function StoreScreen() {
           </Text>
         </View>
         
-        {/* --- Credit Packs Section --- */}
-        <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text }]}>Credit Packs (One-Time Purchase)</Text>
-        <View style={styles.productGrid}>
-          {CREDIT_PACKS.map((p) => (
-            <ProductCard key={p.id} product={p} theme={colorScheme} isSubscription={false} />
-          ))}
-        </View>
-        
-        {/* --- Subscription Section --- */}
-        <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text, marginTop: 25 }]}>Unlimited Subscriptions</Text>
-        <View style={styles.productGrid}>
-          {SUBSCRIPTIONS.map((p) => (
-            <ProductCard key={p.id} product={p} theme={colorScheme} isSubscription={true} />
-          ))}
-        </View>
+        {/* --- Loading State --- */}
+        {loading ? (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={tintColor} />
+                <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text, marginTop: 15 }]}>
+                    Loading store products...
+                </Text>
+            </View>
+        ) : (
+            <>
+                {/* --- Credit Packs Section --- */}
+                <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text }]}>Credit Packs (One-Time Purchase)</Text>
+                <View style={styles.productGrid}>
+                    {creditPacks.map((p) => (
+                        <ProductCard key={p.id} product={p} theme={colorScheme} />
+                    ))}
+                </View>
+                
+                {/* --- Subscription Section --- */}
+                <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text, marginTop: 25 }]}>Unlimited Subscriptions</Text>
+                <View style={styles.productGrid}>
+                    {subscriptions.map((p) => (
+                        <ProductCard key={p.id} product={p} theme={colorScheme} />
+                    ))}
+                </View>
+            </>
+        )}
 
       </ScrollView>
     </SafeAreaView>
@@ -149,7 +315,7 @@ const getStyles = (theme: ThemeKey) =>
       justifyContent: 'space-between',
     },
     cardContainer: {
-      width: '48%', // Approx. half of the screen minus spacing
+      width: '48%', 
       marginBottom: 15,
     },
     card: {
@@ -181,7 +347,7 @@ const getStyles = (theme: ThemeKey) =>
     priceText: {
       fontSize: 24,
       fontWeight: '900',
-      marginTop: 'auto', // Push to the bottom
+      marginTop: 'auto', 
     },
     tag: {
       position: 'absolute',
@@ -197,4 +363,10 @@ const getStyles = (theme: ThemeKey) =>
       fontSize: 10,
       fontWeight: 'bold',
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 50,
+    }
   });

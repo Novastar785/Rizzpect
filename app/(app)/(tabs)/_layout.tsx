@@ -1,33 +1,35 @@
 import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Forzamos el tema oscuro como base del diseño
+const theme = Colors.dark;
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  // app.json forces "light"
-  const colorScheme = useColorScheme() ?? 'light';
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors[colorScheme].tint, // Green
+          // --- CAMBIO: Barra de pestañas oscura y minimalista ---
+          backgroundColor: theme.card, // Fondo de tarjeta oscuro
           paddingBottom: insets.bottom,
           height: 60 + insets.bottom,
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: theme.border, // Borde sutil
         },
-        tabBarActiveTintColor: '#FFFFFF', // White
-        tabBarInactiveTintColor: '#C0E1DC', // Light green
+        tabBarActiveTintColor: theme.tint, // Ícono activo (Púrpura)
+        tabBarInactiveTintColor: theme.tabIconDefault, // Ícono inactivo (Gris)
       }}>
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="home-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -35,8 +37,8 @@ export default function TabsLayout() {
         name="rizz"
         options={{
           title: 'Rizz',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="sparkles-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "sparkles" : "sparkles-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -44,8 +46,8 @@ export default function TabsLayout() {
         name="store"
         options={{
           title: 'Store',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="cart-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "cart" : "cart-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -53,12 +55,11 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="person-outline" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
           ),
         }}
       />
-      {/* Removed old pet/care/reminders tabs */}
     </Tabs>
   );
 }

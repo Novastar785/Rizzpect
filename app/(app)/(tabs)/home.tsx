@@ -1,37 +1,70 @@
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router'; // Importamos router para la navegación
+import { router } from 'expo-router';
 import React from 'react';
-import { StyleSheet, useColorScheme, Pressable } from 'react-native';
+import { StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
+
+// Forzamos el tema oscuro
+const theme = 'dark';
+const themeColors = Colors[theme];
+
+// --- NUEVO: Componente de Ilustración SVG ---
+function HeroIllustration() {
+  return (
+    <View style={styles.svgContainer}>
+      <Svg height="150" width="100%" viewBox="0 0 300 150">
+        <Defs>
+          <LinearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor={themeColors.tint} stopOpacity="1" />
+            <Stop offset="100%" stopColor={themeColors.secondary} stopOpacity="1" />
+          </LinearGradient>
+          <LinearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor={themeColors.card} stopOpacity="0.1" />
+            <Stop offset="100%" stopColor={themeColors.card} stopOpacity="0.3" />
+          </LinearGradient>
+        </Defs>
+        {/* Forma Abstracta 1 (Fondo) */}
+        <Path
+          d="M-20 80 Q 50 20, 100 70 T 200 80 T 320 60 V 150 H -20 Z"
+          fill="url(#grad2)"
+        />
+        {/* Forma Abstracta 2 (Principal) */}
+        <Path
+          d="M-10 100 Q 60 50, 110 90 T 210 100 T 310 80 V 150 H -10 Z"
+          fill="url(#grad1)"
+        />
+      </Svg>
+    </View>
+  );
+}
+// --- FIN: Componente de Ilustración SVG ---
 
 export default function HomeScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const styles = getStyles(colorScheme);
-  const tintColor = Colors[colorScheme].tint;
-  const cardColor = Colors[colorScheme].card;
-
-  // Función para navegar a la pestaña Rizz
   const goToRizz = () => {
-    // Navega a la ruta principal de la pestaña 'rizz'
     router.navigate('/(app)/(tabs)/rizz');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        
+        {/* --- Ilustración Añadida --- */}
+        <HeroIllustration />
+
         <Text style={styles.title}>Welcome to Rizzflow</Text>
         <Text style={styles.subtitle}>Your personal social assistant.</Text>
 
-        {/* --- Card de Presentación (Inspirado en la imagen) --- */}
-        <View style={[styles.infoCard, { backgroundColor: cardColor, borderColor: tintColor }]}>
-          <Text style={[styles.cardTitle, { color: tintColor }]}>
-            <Ionicons name="sparkles" size={20} color={tintColor} />
+        <View style={[styles.infoCard, { backgroundColor: themeColors.card }]}>
+          <Text style={[styles.cardTitle, { color: themeColors.tint }]}>
+            <Ionicons name="sparkles" size={20} color={themeColors.tint} />
             {'  '}How it works:
           </Text>
           <Text style={styles.bulletPoint}>
-            • **Capture any chat screen** (Tinder, Bumble, etc.)
+            • **Upload any screenshot** (Tinder, Bumble, chat, etc.)
           </Text>
           <Text style={styles.bulletPoint}>
             • Rizzflow generates **3-4 clever replies** instantly.
@@ -40,100 +73,97 @@ export default function HomeScreen() {
             • **Tap** the reply to copy and paste it into your chat.
           </Text>
         </View>
-        {/* --- END Card --- */}
 
         {/* --- Botón de Acción Principal --- */}
-        <Pressable
-          style={[styles.mainButton, { backgroundColor: tintColor }]}
-          onPress={goToRizz}>
-          <Text style={styles.mainButtonText}>Start Rizzing!!</Text>
+        <Pressable style={styles.buttonWrapper} onPress={goToRizz}>
+          <ExpoLinearGradient
+            colors={[themeColors.tint, themeColors.secondary]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.buttonGradient}>
+            <Text style={styles.buttonText}>Start Rizzing!!</Text>
+          </ExpoLinearGradient>
         </Pressable>
-        {/* --- END Botón --- */}
-
-        {/* Placeholder para contenido futuro (ej. historial o créditos) */}
-        <View style={styles.footerPlaceholder}>
-          <Text style={styles.footerText}>
-            Check the Store tab to get more Rizz Credits!
-          </Text>
-        </View>
 
       </View>
     </SafeAreaView>
   );
 }
 
-// Styles are now customized for the new layout
-const getStyles = (theme: 'light' | 'dark') =>
-  StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: Colors[theme].background,
-    },
-    container: {
-      flex: 1,
-      paddingHorizontal: 20,
-      paddingTop: 30, // Más espacio arriba
-      alignItems: 'center',
-    },
-    title: {
-      fontSize: 32,
-      fontWeight: 'bold',
-      color: Colors[theme].text,
-      marginBottom: 5,
-    },
-    subtitle: {
-      fontSize: 18,
-      color: Colors[theme].icon,
-      marginBottom: 40,
-    },
-    infoCard: {
-      width: '100%',
-      padding: 20,
-      borderRadius: 12,
-      borderWidth: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 5,
-      elevation: 5,
-      marginBottom: 40,
-    },
-    cardTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginBottom: 15,
-      textAlign: 'center',
-    },
-    bulletPoint: {
-      fontSize: 16,
-      color: Colors[theme].text,
-      marginBottom: 8,
-      lineHeight: 24,
-    },
-    mainButton: {
-      width: '80%',
-      paddingVertical: 18,
-      borderRadius: 99, // Botón tipo píldora
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 5,
-      elevation: 6,
-    },
-    mainButtonText: {
-      color: 'white',
-      fontSize: 20,
-      fontWeight: '900',
-      textTransform: 'uppercase',
-    },
-    footerPlaceholder: {
-      marginTop: 40,
-      alignItems: 'center',
-    },
-    footerText: {
-      fontSize: 14,
-      color: Colors[theme].icon,
-    },
-  });
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: themeColors.background,
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    backgroundColor: themeColors.background,
+  },
+  // --- NUEVO: Estilo para el SVG ---
+  svgContainer: {
+    width: '100%',
+    maxHeight: 150,
+    marginBottom: 20,
+    opacity: 0.8,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: themeColors.text,
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 18,
+    color: themeColors.icon,
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  infoCard: {
+    width: '100%',
+    padding: 20,
+    borderRadius: 16, // Más redondeado
+    backgroundColor: themeColors.card,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    marginBottom: 30,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  bulletPoint: {
+    fontSize: 16,
+    color: themeColors.text,
+    marginBottom: 8,
+    lineHeight: 24,
+  },
+  buttonWrapper: {
+    width: '100%',
+    borderRadius: 12,
+    marginTop: 10,
+    shadowColor: themeColors.tint, // Sombra de color
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    marginBottom: 15,
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 12,
+    width: '100%',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});

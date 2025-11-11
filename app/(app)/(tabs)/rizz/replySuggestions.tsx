@@ -6,7 +6,6 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
   StyleSheet,
-  useColorScheme,
   TextInput,
   Pressable,
   Alert,
@@ -18,8 +17,8 @@ import {
   LogBox,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient'; // --- NUEVO: Importar gradiente
 
-// Ignore a specific warning from expo-image-picker
 LogBox.ignoreLogs([
   '[expo-image-picker] `ImagePicker.MediaTypeOptions` have been deprecated',
 ]);
@@ -28,12 +27,15 @@ LogBox.ignoreLogs([
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 const MAX_PROMPT_LENGTH = 600;
-const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant']; // Tones constant
+// --- CAMBIO: Tono "Spicy" añadido ---
+const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant', 'Spicy'];
+
+// Forzamos el tema oscuro
+const theme = 'dark';
+const themeColors = Colors[theme];
 
 export default function ReplySuggestionsScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const styles = getStyles(colorScheme);
-  const tintColor = Colors[colorScheme].tint;
+  const styles = getStyles(theme);
 
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,11 @@ export default function ReplySuggestionsScreen() {
     useState<ImagePicker.ImagePickerAsset | null>(null);
   const [selectedTone, setSelectedTone] = useState(TONES[0]);
 
+  // --- NUEVO: Estado de focus para el input ---
+  const [inputFocused, setInputFocused] = useState(false);
+
   const pickImage = async () => {
+    // (Lógica de pickImage sin cambios...)
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
@@ -66,11 +72,13 @@ export default function ReplySuggestionsScreen() {
   };
 
   const copyToClipboard = async (text: string) => {
+    // (Lógica de copyToClipboard sin cambios...)
     await Clipboard.setStringAsync(text);
     Alert.alert('Copied!', 'The text has been copied to your clipboard.');
   };
 
   const handleGenerateRizz = async () => {
+    // (Lógica de la API sin cambios...)
     if (!GEMINI_API_KEY) {
       Alert.alert(
         'API Key Missing',
@@ -90,13 +98,12 @@ export default function ReplySuggestionsScreen() {
     setLoading(true);
     setResults([]);
 
-    // --- UPDATED: System prompt for "Get Replies" ---
+    // --- CAMBIO: Ajuste del system prompt para "Spicy" ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 witty, clever, or engaging replies to a message the user received.
-    Your tone MUST be: ${selectedTone}.
+    Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
     If an image of a chat is provided, analyze the LAST MESSAGE in the screenshot and provide a reply for it.
     If text is also provided, use that as extra context about the conversation or the person.
-
     --- STRICT RULES (MANDATORY) ---
     1.  **DO NOT** include any greetings, salutations, commentary, or preambles (e.g., "Hello!", "Sure!", "Here are some options:").
     2.  Your response **MUST ONLY** contain the list of 3-4 reply suggestions.
@@ -188,13 +195,20 @@ export default function ReplySuggestionsScreen() {
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
         >
+          {/* --- CAMBIO: Botón "Upload" ahora con gradiente y sombra --- */}
           <Pressable
-            style={[styles.button, styles.uploadButton]}
+            style={[styles.buttonWrapper, { marginBottom: 15 }]} // Usa el mismo wrapper y añade margen
             onPress={pickImage}
             disabled={loading}>
-            <Ionicons name="camera-outline" size={20} color="white" />
-            {/* --- UPDATED TEXT --- */}
-            <Text style={styles.buttonText}>Upload Conversation Screenshot</Text>
+            <LinearGradient
+              // Usamos el mismo gradiente para consistencia
+              colors={[themeColors.tint, themeColors.secondary]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.buttonGradient}>
+              <Ionicons name="camera-outline" size={20} color="white" />
+              <Text style={styles.buttonText}>Upload Conversation Screenshot</Text>
+            </LinearGradient>
           </Pressable>
 
           {selectedImage && (
@@ -213,20 +227,25 @@ export default function ReplySuggestionsScreen() {
 
           <Text style={styles.orText}>OR</Text>
 
-          {/* --- UPDATED TEXT --- */}
           <Text style={styles.subtitle}>
             Upload a screenshot, or type the last message you received:
           </Text>
 
-          <View style={styles.textInputContainer}>
+          {/* --- CAMBIO: Input con estilo de focus --- */}
+          <View style={[
+            styles.textInputContainer,
+            { borderColor: inputFocused ? themeColors.tint : themeColors.border }
+          ]}>
             <TextInput
               style={styles.textInput}
               placeholder="e.g., 'She said she loves pineapple on pizza, what do I say back?'"
-              placeholderTextColor={Colors[colorScheme].icon}
+              placeholderTextColor={themeColors.icon}
               multiline
               value={prompt}
               onChangeText={setPrompt}
               maxLength={MAX_PROMPT_LENGTH}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
             />
             <Text style={styles.charCounter}>
               {MAX_PROMPT_LENGTH - prompt.length} / {MAX_PROMPT_LENGTH}
@@ -256,21 +275,28 @@ export default function ReplySuggestionsScreen() {
             </View>
           </View>
 
+          {/* --- CAMBIO: Botón con Gradiente --- */}
           <Pressable
-            style={[styles.button, { backgroundColor: tintColor }]}
+            style={styles.buttonWrapper}
             onPress={handleGenerateRizz}
             disabled={loading}>
-            <Ionicons name="sparkles-outline" size={20} color="white" />
-            {/* --- UPDATED TEXT --- */}
-            <Text style={styles.buttonText}>
-              {loading ? 'Generating...' : 'Get Reply'}
-            </Text>
+            <LinearGradient
+              colors={[themeColors.tint, themeColors.secondary]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.buttonGradient}>
+              <Ionicons name="sparkles-outline" size={20} color="white" />
+              <Text style={styles.buttonText}>
+                {loading ? 'Generating...' : 'Get Reply'}
+              </Text>
+            </LinearGradient>
           </Pressable>
+          {/* --- FIN CAMBIO --- */}
 
           {loading && (
             <ActivityIndicator
               size="large"
-              color={tintColor}
+              color={themeColors.tint}
               style={styles.loading}
             />
           )}
@@ -286,7 +312,7 @@ export default function ReplySuggestionsScreen() {
                   <Ionicons
                     name="copy-outline"
                     size={18}
-                    color={tintColor}
+                    color={themeColors.tint}
                   />
                 </Pressable>
               ))}
@@ -298,11 +324,12 @@ export default function ReplySuggestionsScreen() {
   );
 }
 
+// Estilos actualizados para el tema oscuro (idénticos a startConversation)
 const getStyles = (theme: 'light' | 'dark') =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: Colors[theme].background,
+      backgroundColor: themeColors.background,
     },
     keyboardAvoidingView: {
       flex: 1,
@@ -312,19 +339,17 @@ const getStyles = (theme: 'light' | 'dark') =>
       padding: 20,
     },
     scrollContainer: {
-      flexGrow: 1,
-    },
-    uploadButton: {
-      backgroundColor: '#007AFF', // A different, "callable" blue
-      marginBottom: 15,
+    // --- CAMBIO: flexGrow eliminado, paddingBottom añadido ---
+    paddingBottom: 100,
     },
     orText: {
       fontSize: 16,
-      color: Colors[theme].icon,
+      color: themeColors.icon,
       textAlign: 'center',
       marginBottom: 15,
       fontWeight: 'bold',
     },
+    // --- ESTILOS RESTAURADOS ---
     previewContainer: {
       marginBottom: 15,
       alignItems: 'center',
@@ -334,7 +359,7 @@ const getStyles = (theme: 'light' | 'dark') =>
       width: '100%',
       height: 200,
       borderRadius: 12,
-      borderColor: Colors[theme].border,
+      borderColor: themeColors.border,
       borderWidth: 1,
     },
     removeImageButton: {
@@ -346,27 +371,27 @@ const getStyles = (theme: 'light' | 'dark') =>
     },
     subtitle: {
       fontSize: 16,
-      color: Colors[theme].icon,
+      color: themeColors.icon,
       marginBottom: 15,
       textAlign: 'center',
     },
     textInputContainer: {
       marginBottom: 20,
-      backgroundColor: Colors[theme].card,
-      borderColor: Colors[theme].border,
-      borderWidth: 1,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border, // Color por defecto
+      borderWidth: 1.5, // Ligeramente más grueso
       borderRadius: 12,
     },
     textInput: {
       padding: 15,
       fontSize: 16,
-      color: Colors[theme].text,
+      color: themeColors.text,
       minHeight: 120,
       textAlignVertical: 'top',
     },
     charCounter: {
       fontSize: 12,
-      color: Colors[theme].icon,
+      color: themeColors.icon,
       textAlign: 'right',
       paddingHorizontal: 15,
       paddingBottom: 10,
@@ -377,7 +402,7 @@ const getStyles = (theme: 'light' | 'dark') =>
     tonalityLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: Colors[theme].text,
+      color: themeColors.text,
       textAlign: 'center',
       marginBottom: 10,
     },
@@ -387,34 +412,51 @@ const getStyles = (theme: 'light' | 'dark') =>
       flexWrap: 'wrap',
     },
     toneButton: {
-      backgroundColor: Colors[theme].card,
-      borderColor: Colors[theme].border,
-      borderWidth: 1,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border,
+      borderWidth: 1.5,
       paddingVertical: 8,
       paddingHorizontal: 16,
       borderRadius: 99,
       margin: 4,
+      // Sombra añadida
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+      elevation: 4,
     },
     toneButtonActive: {
-      backgroundColor: Colors[theme].tint,
-      borderColor: Colors[theme].tint,
+      backgroundColor: themeColors.tint,
+      borderColor: themeColors.tint,
     },
     toneButtonText: {
       fontSize: 14,
-      color: Colors[theme].text,
+      color: themeColors.text,
     },
     toneButtonTextActive: {
       color: '#FFFFFF',
       fontWeight: 'bold',
     },
-    button: {
+    // --- FIN DE ESTILOS RESTAURADOS ---
+    buttonWrapper: {
+      width: '100%',
+      borderRadius: 99,
+      shadowColor: themeColors.tint,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+      elevation: 8,
+    },
+    buttonGradient: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 15,
-      borderRadius: 99, // Pill shape
+      borderRadius: 99,
       width: '100%',
     },
+    // --- FIN NUEVO ---
     buttonText: {
       color: 'white',
       fontSize: 18,
@@ -426,14 +468,14 @@ const getStyles = (theme: 'light' | 'dark') =>
     },
     resultContainer: {
       marginTop: 20,
-      marginBottom: 50, // Add space at the bottom
+      marginBottom: 50,
     },
     pillResult: {
-      backgroundColor: Colors[theme].card,
+      backgroundColor: themeColors.card,
       borderRadius: 12,
       paddingVertical: 15,
       paddingHorizontal: 20,
-      borderColor: Colors[theme].border,
+      borderColor: themeColors.border,
       borderWidth: 1,
       marginBottom: 10,
       flexDirection: 'row',
@@ -441,15 +483,15 @@ const getStyles = (theme: 'light' | 'dark') =>
       alignItems: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
+      shadowOpacity: 0.1,
       shadowRadius: 2,
-      elevation: 1,
+      elevation: 2,
     },
     pillResultText: {
       fontSize: 16,
-      color: Colors[theme].text,
+      color: themeColors.text,
       lineHeight: 24,
-      flex: 1, // Ensure text wraps
-      marginRight: 10, // Space before copy icon
+      flex: 1,
+      marginRight: 10,
     },
   });

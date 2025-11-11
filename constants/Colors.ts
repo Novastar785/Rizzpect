@@ -1,27 +1,35 @@
-// 1. ¡Este es tu nuevo color primario de Figma!
-const tintColor = '#5AB198';
+// 1. --- Nueva Paleta de Colores ---
+// Tema oscuro minimalista con acentos vibrantes
 
-// 2. Aquí definimos tu nueva paleta de colores
-// He añadido 'card' y 'border' para estandarizar los componentes
+const tintColor = '#C039FF'; // Púrpura vibrante (Acento principal)
+const secondaryColor = '#007AFF'; // Azul brillante (Acento secundario)
+const accentRed = '#FF3B30'; // Rojo pasión (Reemplaza al rosa)
+
 export default {
   light: {
-    text: '#1A202C', // Gris oscuro (para texto)
-    background: '#FFFFFF', // Blanco
-    tint: tintColor, // Tu verde azulado
-    icon: '#A0AEC0', // Gris claro (para íconos/placeholders)
+    // El modo claro se mantiene, pero nos centraremos en el oscuro
+    text: '#1A202C',
+    background: '#FFFFFF',
+    tint: tintColor,
+    secondary: secondaryColor,
+    accentRed: accentRed,
+    icon: '#A0AEC0',
     tabIconDefault: '#A0AEC0',
     tabIconSelected: tintColor,
-    card: '#F7FAFC', // Un gris muy claro para fondos de tarjetas
-    border: '#E2E8F0', // Un borde sutil
+    card: '#F7FAFC',
+    border: '#E2E8F0',
   },
   dark: {
-    text: '#FFFFFF', // Blanco (para texto)
-    background: '#1C1C1E', // Nuestro fondo oscuro
-    tint: tintColor, // Tu verde azulado
-    icon: '#718096', // Gris (para íconos/placeholders)
-    tabIconDefault: '#718096',
-    tabIconSelected: tintColor,
-    card: '#2C2C2E', // Un gris oscuro para fondos de tarjetas
-    border: '#3E3E40', // Un borde sutil para modo oscuro
+    // --- NUEVO TEMA OSCURO ---
+    text: '#FFFFFF', // Blanco
+    background: '#121212', // Negro tipo Spotify
+    tint: tintColor, // Púrpura
+    secondary: secondaryColor, // Azul
+    accentRed: accentRed, // Rojo
+    icon: '#B3B3B3', // Gris claro para íconos inactivos
+    tabIconDefault: '#B3B3B3', // Ícono de pestaña inactivo
+    tabIconSelected: tintColor, // Ícono de pestaña activo (Púrpura)
+    card: '#1E1E1E', // Gris oscuro para tarjetas
+    border: '#2A2A2A', // Borde muy sutil
   },
 };

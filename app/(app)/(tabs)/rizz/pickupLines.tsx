@@ -5,35 +5,38 @@ import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
 import {
   StyleSheet,
-  useColorScheme,
   Pressable,
   Alert,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient'; // --- NUEVO: Importar gradiente
 
 // --- API Configuration ---
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
-const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant']; // Tones constant
+const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant'];
+
+// Forzamos el tema oscuro
+const theme = 'dark';
+const themeColors = Colors[theme];
 
 export default function PickupLinesScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const styles = getStyles(colorScheme);
-  const tintColor = Colors[colorScheme].tint;
+  const styles = getStyles(theme);
 
-  // No 'prompt' state needed for this screen
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
   const [selectedTone, setSelectedTone] = useState(TONES[0]);
 
   const copyToClipboard = async (text: string) => {
+    // (Lógica de copyToClipboard sin cambios...)
     await Clipboard.setStringAsync(text);
     Alert.alert('Copied!', 'The text has been copied to your clipboard.');
   };
 
   const handleGenerateRizz = async () => {
+    // (Lógica de la API sin cambios...)
     if (!GEMINI_API_KEY) {
       Alert.alert(
         'API Key Missing',
@@ -45,12 +48,10 @@ export default function PickupLinesScreen() {
     setLoading(true);
     setResults([]);
 
-    // --- UPDATED: System prompt for "Pickup Lines" ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 creative "Banger Pickup Lines".
     Your tone MUST be: ${selectedTone}.
     The user is not providing any context other than the tone, so be creative.
-
     --- STRICT RULES (MANDATORY) ---
     1.  Your response **MUST ONLY** contain the list of 3-4 pickup lines.
     2.  Each line **MUST** be on a new line.
@@ -64,7 +65,6 @@ export default function PickupLinesScreen() {
     10. If the user asks for anything other than pickup lines, you **MUST** politely refuse and redirect them to the app's purpose.
         Example refusal: "My purpose is to generate pickup lines, so I can't help with that. Let's get you some lines!"`;
 
-    // No prompt from user, just a simple trigger
     const parts = [{ text: `Generate pickup lines.` }];
 
     try {
@@ -110,7 +110,6 @@ export default function PickupLinesScreen() {
   };
 
   return (
-    // No KeyboardAvoidingView needed here
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.container}
@@ -120,8 +119,6 @@ export default function PickupLinesScreen() {
         <Text style={styles.subtitle}>
           Select a tone and get 3-4 banger pickup lines.
         </Text>
-
-        {/* Text Input Removed */}
 
         <View style={styles.tonalityContainer}>
           <Text style={styles.tonalityLabel}>Tonality</Text>
@@ -146,20 +143,28 @@ export default function PickupLinesScreen() {
           </View>
         </View>
 
+        {/* --- CAMBIO: Botón con Gradiente --- */}
         <Pressable
-          style={[styles.button, { backgroundColor: tintColor }]}
+          style={styles.buttonWrapper}
           onPress={handleGenerateRizz}
           disabled={loading}>
-          <Ionicons name="sparkles-outline" size={20} color="white" />
-          <Text style={styles.buttonText}>
-            {loading ? 'Generating...' : 'Generate Lines'}
-          </Text>
+          <LinearGradient
+            colors={[themeColors.tint, themeColors.secondary]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.buttonGradient}>
+            <Ionicons name="sparkles-outline" size={20} color="white" />
+            <Text style={styles.buttonText}>
+              {loading ? 'Generating...' : 'Generate Lines'}
+            </Text>
+          </LinearGradient>
         </Pressable>
+        {/* --- FIN CAMBIO --- */}
 
         {loading && (
           <ActivityIndicator
             size="large"
-            color={tintColor}
+            color={themeColors.tint}
             style={styles.loading}
           />
         )}
@@ -175,7 +180,7 @@ export default function PickupLinesScreen() {
                 <Ionicons
                   name="copy-outline"
                   size={18}
-                  color={tintColor}
+                  color={themeColors.tint}
                 />
               </Pressable>
             ))}
@@ -186,22 +191,24 @@ export default function PickupLinesScreen() {
   );
 }
 
+// Estilos actualizados para el tema oscuro
 const getStyles = (theme: 'light' | 'dark') =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: Colors[theme].background,
+      backgroundColor: themeColors.background,
     },
     container: {
       flex: 1,
       padding: 20,
     },
     scrollContainer: {
-      flexGrow: 1,
+    // --- CAMBIO: flexGrow eliminado, paddingBottom añadido ---
+    paddingBottom: 100,
     },
     subtitle: {
       fontSize: 16,
-      color: Colors[theme].icon,
+      color: themeColors.icon,
       marginBottom: 15,
       textAlign: 'center',
     },
@@ -211,7 +218,7 @@ const getStyles = (theme: 'light' | 'dark') =>
     tonalityLabel: {
       fontSize: 16,
       fontWeight: '600',
-      color: Colors[theme].text,
+      color: themeColors.text,
       textAlign: 'center',
       marginBottom: 10,
     },
@@ -221,34 +228,52 @@ const getStyles = (theme: 'light' | 'dark') =>
       flexWrap: 'wrap',
     },
     toneButton: {
-      backgroundColor: Colors[theme].card,
-      borderColor: Colors[theme].border,
-      borderWidth: 1,
+      backgroundColor: themeColors.card,
+      borderColor: themeColors.border,
+      borderWidth: 1.5,
       paddingVertical: 8,
       paddingHorizontal: 16,
       borderRadius: 99,
       margin: 4,
+      // --- NUEVA SOMBRA ---
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+      elevation: 4,
+      // --- FIN SOMBRA ---
     },
     toneButtonActive: {
-      backgroundColor: Colors[theme].tint,
-      borderColor: Colors[theme].tint,
+      backgroundColor: themeColors.tint,
+      borderColor: themeColors.tint,
     },
     toneButtonText: {
       fontSize: 14,
-      color: Colors[theme].text,
+      color: themeColors.text,
     },
     toneButtonTextActive: {
       color: '#FFFFFF',
       fontWeight: 'bold',
     },
-    button: {
+    // --- NUEVO: Estilos para el botón de gradiente ---
+    buttonWrapper: {
+      width: '100%',
+      borderRadius: 99,
+      shadowColor: themeColors.tint,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+      elevation: 8,
+    },
+    buttonGradient: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 15,
-      borderRadius: 99, // Pill shape
+      borderRadius: 99,
       width: '100%',
     },
+    // --- FIN NUEVO ---
     buttonText: {
       color: 'white',
       fontSize: 18,
@@ -260,14 +285,14 @@ const getStyles = (theme: 'light' | 'dark') =>
     },
     resultContainer: {
       marginTop: 20,
-      marginBottom: 50, // Add space at the bottom
+      marginBottom: 50,
     },
     pillResult: {
-      backgroundColor: Colors[theme].card,
+      backgroundColor: themeColors.card,
       borderRadius: 12,
       paddingVertical: 15,
       paddingHorizontal: 20,
-      borderColor: Colors[theme].border,
+      borderColor: themeColors.border,
       borderWidth: 1,
       marginBottom: 10,
       flexDirection: 'row',
@@ -275,15 +300,15 @@ const getStyles = (theme: 'light' | 'dark') =>
       alignItems: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
+      shadowOpacity: 0.1,
       shadowRadius: 2,
-      elevation: 1,
+      elevation: 2,
     },
     pillResultText: {
       fontSize: 16,
-      color: Colors[theme].text,
+      color: themeColors.text,
       lineHeight: 24,
-      flex: 1, // Ensure text wraps
-      marginRight: 10, // Space before copy icon
+      flex: 1,
+      marginRight: 10,
     },
   });
