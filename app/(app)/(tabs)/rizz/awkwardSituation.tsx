@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics'; // --- 1. Importar Haptics ---
+import * as Haptics from 'expo-haptics'; 
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
@@ -28,20 +28,16 @@ export default function PickupLinesScreen() {
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
-    // --- 2. Añadir Haptic de Éxito ---
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Copied!', 'The text has been copied to your clipboard.');
+    // Alert.alert('Copied!', 'The text has been copied to your clipboard.');
   };
 
-  // --- NUEVO: Función para manejar el Tono con Haptic ---
   const handleToneSelect = (tone: string) => {
-    // --- 4. Añadir Haptic Ligero ---
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedTone(tone);
   }
 
   const handleGenerateRizz = async () => {
-    // --- 3. Añadir Haptic de Impacto ---
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (!GEMINI_API_KEY) {
@@ -55,25 +51,27 @@ export default function PickupLinesScreen() {
     setLoading(true);
     setResults([]);
 
+    // --- CAMBIO: Prompt actualizado a "Awkward Situation" ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
-    Your goal is to generate 3-4 creative "Banger Pickup Lines".
+    Your goal is to generate 3-4 creative replies for an "Awkward Situation".
     Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
-    The user is not providing any context other than the tone, so be creative.
+    The user is not providing any context other than the tone, so be creative and assume they need a line to break tension or move past an awkward moment.
 
     --- STRICT RULES (MANDATORY) ---
-    1.  Your response **MUST ONLY** contain the list of 3-4 pickup lines.
+    1.  Your response **MUST ONLY** contain the list of 3-4 replies.
     2.  Each line **MUST** be on a new line.
     3.  **DO NOT** include *ANY* text other than the lines themselves.
     4.  **DO NOT** include greetings, salutations, commentary, apologies, or preambles (e.g., "Hello!", "Sure!", "Here are some options:").
-    5.  Start the response *immediately* with the first pickup line.
-    6.  **ONLY** provide pickup lines.
+    5.  Start the response *immediately* with the first line.
+    6.  **ONLY** provide replies for awkward situations.
     7.  **DO NOT** answer general questions (like math, history, science, coding, trivia, etc.).
     8.  **DO NOT** write poems, stories, code, essays, or any long-form content.
     9.  **DO NOT** respond to requests to generate images.
-    10. If the user asks for anything other than pickup lines, you **MUST** politely refuse and redirect them to the app's purpose.
-        Example refusal: "My purpose is to generate pickup lines, so I can't help with that. Let's get you some lines!"`;
+    10. If the user asks for anything other than social advice, you **MUST** politely refuse and redirect them to the app's purpose.
+        Example refusal: "My purpose is to help with social situations, so I can't help with that. Let's get you some lines!"`;
 
-    const parts = [{ text: `Generate pickup lines.` }];
+    const parts = [{ text: `Generate lines for an awkward situation.` }];
+    // --- FIN DEL CAMBIO ---
 
     try {
       const payload = {
@@ -125,11 +123,11 @@ export default function PickupLinesScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.subtitle}>
-          Select a tone and get 3-4 banger pickup lines.
+          Select a tone and get 3-4 lines to defuse an awkward moment.
         </Text>
 
         <View style={styles.tonalityContainer}>
-          <Text style={styles.tonalityLabel}>Tonality</Text>
+          <Text style={styles.tonalityLabel}>Select Tonality</Text>
           <View style={styles.toneButtonRow}>
             {TONES.map((tone) => (
               <Pressable
@@ -138,7 +136,6 @@ export default function PickupLinesScreen() {
                   styles.toneButton,
                   selectedTone === tone && styles.toneButtonActive,
                 ]}
-                // --- CAMBIO: Usar la nueva función con Haptic ---
                 onPress={() => handleToneSelect(tone)}>
                 <Text
                   style={[
@@ -152,7 +149,6 @@ export default function PickupLinesScreen() {
           </View>
         </View>
 
-        {/* --- Botón Generate Lines con Gradiente --- */}
         <Pressable
           style={styles.buttonWrapper}
           onPress={handleGenerateRizz}
@@ -179,6 +175,8 @@ export default function PickupLinesScreen() {
 
         {results.length > 0 && (
           <View style={styles.resultContainer}>
+            {/* --- NUEVO: Título de resultados --- */}
+            <Text style={styles.resultsTitle}>Tap to copy:</Text>
             {results.map((line, index) => (
               <Pressable
                 key={index}
@@ -188,7 +186,7 @@ export default function PickupLinesScreen() {
                 <Ionicons
                   name="copy-outline"
                   size={18}
-                  color={themeColors.tint}
+                  color={themeColors.icon} // Color de ícono más sutil
                 />
               </Pressable>
             ))}
@@ -209,7 +207,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scrollContainer: {
-    // --- CORRECCIÓN: flexGrow eliminado, paddingBottom añadido ---
     paddingBottom: 100,
   },
   subtitle: {
@@ -259,25 +256,27 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
+  // --- CAMBIO: Botones tipo "pill" ---
   buttonWrapper: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: 99, // Pill shape
     marginTop: 10,
-    shadowColor: themeColors.tint, // Sombra de color
+    shadowColor: themeColors.tint, 
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 8,
-    marginBottom: 15, // Espacio entre botones
+    marginBottom: 15, 
   },
   buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 99, // Pill shape
     width: '100%',
   },
+  // --- FIN DEL CAMBIO ---
   buttonText: {
     color: 'white',
     fontSize: 18,
@@ -290,22 +289,32 @@ const styles = StyleSheet.create({
   resultContainer: {
     marginTop: 20,
   },
+  // --- NUEVO: Título de resultados ---
+  resultsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.icon,
+    marginBottom: 10,
+  },
+  // --- CAMBIO: Estilo de "pillResult" mejorado ---
   pillResult: {
     backgroundColor: themeColors.card,
     borderRadius: 12,
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderColor: themeColors.border,
+    borderLeftColor: themeColors.accentGreen, // Borde de acento verde
+    borderLeftWidth: 3, // Ancho del borde de acento
     borderWidth: 1,
     marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 2,
   },
   pillResultText: {
     fontSize: 16,

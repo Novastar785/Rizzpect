@@ -3,7 +3,8 @@
 
 const tintColor = '#C039FF'; // Púrpura vibrante (Acento principal)
 const secondaryColor = '#007AFF'; // Azul brillante (Acento secundario)
-const accentRed = '#FF3B30'; // Rojo pasión (Reemplaza al rosa)
+const accentRed = '#FF3B30'; // Rojo pasión
+const accentGreen = '#34C759'; // Verde éxito
 
 export default {
   light: {
@@ -13,6 +14,7 @@ export default {
     tint: tintColor,
     secondary: secondaryColor,
     accentRed: accentRed,
+    accentGreen: accentGreen,
     icon: '#A0AEC0',
     tabIconDefault: '#A0AEC0',
     tabIconSelected: tintColor,
@@ -26,6 +28,7 @@ export default {
     tint: tintColor, // Púrpura
     secondary: secondaryColor, // Azul
     accentRed: accentRed, // Rojo
+    accentGreen: accentGreen, // Verde
     icon: '#B3B3B3', // Gris claro para íconos inactivos
     tabIconDefault: '#B3B3B3', // Ícono de pestaña inactivo
     tabIconSelected: tintColor, // Ícono de pestaña activo (Púrpura)

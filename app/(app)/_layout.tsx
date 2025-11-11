@@ -1,8 +1,8 @@
-import Colors from '../../constants/Colors'; 
+import Colors from '../../constants/Colors';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
-import { Link, Stack, useFocusEffect } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { Link, Stack, useFocusEffect, router } from 'expo-router'; // Importar router
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   Image,
   Modal,
@@ -10,51 +10,83 @@ import {
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
-  useColorScheme,
   View,
 } from 'react-native';
+
+// Forzamos el tema oscuro
+const theme = 'dark';
+const themeColors = Colors[theme];
 
 export default function AppLayout() {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // app.json fuerza "light"
-  const colorScheme = useColorScheme() ?? 'light';
-  const tintColor = Colors[colorScheme].tint;
+  // --- NUEVO: Hook de Supabase Auth ---
+  // Escucha cambios de autenticación para actualizar el perfil
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          fetchProfile(session.user.id);
+        }
+        if (event === 'SIGNED_OUT') {
+          setProfile(null);
+        }
+      }
+    );
 
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // --- MODIFICADO: useFocusEffect ---
+  // Ahora solo obtiene el perfil si no lo tenemos
   useFocusEffect(
     useCallback(() => {
-      async function fetchProfile() {
+      async function getInitialProfile() {
+        if (profile) return; // No volver a cargar si ya lo tenemos
+
         setLoading(true);
         const {
           data: { user },
         } = await supabase.auth.getUser();
+        
         if (user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('name, foto_url')
-            .eq('id', user.id)
-            .single();
-
-          if (data) {
-            setProfile(data);
-          }
+          await fetchProfile(user.id);
         }
         setLoading(false);
       }
-      fetchProfile();
-    }, [])
+      getInitialProfile();
+    }, [profile]) // Depende de 'profile'
   );
+
+  // --- NUEVO: Función de fetch separada ---
+  async function fetchProfile(userId: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('name, foto_url')
+      .eq('id', userId)
+      .single();
+
+    if (data) {
+      setProfile(data);
+    } else if (error) {
+      console.log('Error fetching profile:', error.message);
+    }
+    setLoading(false);
+  }
+
 
   const handleLogout = async () => {
     setMenuVisible(false);
     await supabase.auth.signOut();
+    // El listener en _layout.tsx (raíz) se encargará de la redirección
   };
 
   return (
     <>
-      {/* --- El Menú Modal (Simplificado para apuntar a /profile de la pestaña) --- */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -65,30 +97,55 @@ export default function AppLayout() {
             <View
               style={[
                 styles.menuContainer,
-                { backgroundColor: Colors[colorScheme].background },
+                { backgroundColor: themeColors.card }, // Color de tarjeta
               ]}>
-              {/* Navegará a la pantalla de Profile dentro del Stack de Tabs */}
-              <Link href="/(app)/(tabs)/profile" asChild>
-                <Pressable
-                  style={styles.menuButton}
-                  onPress={() => setMenuVisible(false)}>
-                  <Ionicons
-                    name="person-outline"
-                    size={20}
-                    color={Colors[colorScheme].text}
-                  />
-                  <Text
-                    style={[
-                      styles.menuButtonText,
-                      { color: Colors[colorScheme].text },
-                    ]}>
-                    My Profile
-                  </Text>
-                </Pressable>
-              </Link>
+              {/* --- CAMBIO: Navegar a la pestaña de perfil --- */}
+              <Pressable
+                style={styles.menuButton}
+                onPress={() => {
+                  setMenuVisible(false);
+                  router.navigate('/(app)/(tabs)/profile'); // Navegar a la pestaña
+                }}>
+                <Ionicons
+                  name="person-outline"
+                  size={20}
+                  color={themeColors.text}
+                />
+                <Text
+                  style={[
+                    styles.menuButtonText,
+                    { color: themeColors.text },
+                  ]}>
+                  My Profile
+                </Text>
+              </Pressable>
+              
+              {/* --- CAMBIO: Navegar a la pestaña de tienda --- */}
+              <Pressable
+                style={styles.menuButton}
+                onPress={() => {
+                  setMenuVisible(false);
+                  router.navigate('/(app)/(tabs)/store'); // Navegar a la pestaña
+                }}>
+                <Ionicons
+                  name="cart-outline"
+                  size={20}
+                  color={themeColors.text}
+                />
+                <Text
+                  style={[
+                    styles.menuButtonText,
+                    { color: themeColors.text },
+                  ]}>
+                  Store
+                </Text>
+              </Pressable>
+
+              <View style={styles.menuDivider} />
+
               <Pressable style={styles.menuButton} onPress={handleLogout}>
-                <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-                <Text style={[styles.menuButtonText, { color: '#FF3B30' }]}>
+                <Ionicons name="log-out-outline" size={20} color={themeColors.accentRed} />
+                <Text style={[styles.menuButtonText, { color: themeColors.accentRed }]}>
                   Sign Out
                 </Text>
               </Pressable>
@@ -97,51 +154,57 @@ export default function AppLayout() {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* --- El "Stack Maestro" (Modificado) --- */}
       <Stack
         screenOptions={{
-          // Fondo de cabecera verde
           headerStyle: {
-            backgroundColor: tintColor,
+            backgroundColor: themeColors.background, // Fondo oscuro
           },
-          // Título y botón "atrás" en blanco
-          headerTintColor: '#FFFFFF',
+          headerTintColor: themeColors.text, // Flecha blanca
+          headerShadowVisible: false, // Ocultar línea
         }}>
         <Stack.Screen
           name="(tabs)"
           options={{
-            // --- CAMBIO 1: Ocultamos la cabecera del Stack que contiene las Tabs ---
-            headerShown: false,
-            // --- CAMBIO 2: Eliminamos el headerRight que contiene el icono de perfil ---
-            // headerRight: () => (
-            //   <Pressable
-            //     onPress={() => setMenuVisible(true)}
-            //     style={{ marginRight: 15 }}>
-            //     <View style={styles.avatar}>
-            //       {loading ? (
-            //         <Ionicons
-            //           name="person-circle-outline"
-            //           size={30}
-            //           color={tintColor}
-            //         />
-            //       ) : profile?.foto_url ? (
-            //         <Image
-            //           source={{ uri: profile.foto_url }}
-            //           style={styles.avatarImage}
-            //         />
-            //       ) : (
-            //         <Text style={styles.avatarLetter}>
-            //           {(profile?.name || '?').charAt(0).toUpperCase()}
-            //         </Text>
-            //       )}
-            //     </View>
-            //   </Pressable>
-            // ),
-            // headerTitle: '', // Ya no es necesario si headerShown: false
+            headerShown: true, // Mostrar cabecera
+            headerTitle: '', // Sin título
+            headerTransparent: false,
+            headerStyle: {
+              backgroundColor: themeColors.background,
+            },
+            headerLeft: () => (
+              <Text style={styles.headerTitle}>Rizzflows</Text>
+            ),
+            headerRight: () => (
+              <Pressable
+                onPress={() => setMenuVisible(true)}
+                style={{ marginRight: 15 }}>
+                <View style={styles.avatar}>
+                  {loading ? (
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={30}
+                      color={themeColors.tint}
+                    />
+                  ) : profile?.foto_url ? (
+                    <Image
+                      source={{ uri: profile.foto_url }}
+                      style={styles.avatarImage}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="person-circle"
+                      size={32}
+                      color={themeColors.icon} // Icono gris si no hay foto
+                    />
+                  )}
+                </View>
+              </Pressable>
+            ),
           }}
         />
         {/*
-          Resto de rutas de Stack (si las hay)
+          El stack de Rizz (dentro de tabs) definirá sus propios títulos
+          en app/(app)/(tabs)/rizz/_layout.tsx
         */}
       </Stack>
     </>
@@ -159,28 +222,42 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 10,
     marginRight: 10,
-    marginTop: 60, // Ajustado para la cabecera
+    marginTop: 80, // Ajustado para la nueva cabecera
     width: 200,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
+    borderColor: themeColors.border,
+    borderWidth: 1,
   },
   menuButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
+    backgroundColor: 'transparent',
   },
   menuButtonText: {
     fontSize: 16,
+    marginLeft: 10,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: themeColors.border,
+    marginVertical: 5,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: themeColors.text,
     marginLeft: 10,
   },
   avatar: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF', // Fondo blanco
+    backgroundColor: themeColors.card, // Fondo de tarjeta
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -188,10 +265,5 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: '100%',
     height: '100%',
-  },
-  avatarLetter: {
-    color: Colors.light.tint, // Letra en verde
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

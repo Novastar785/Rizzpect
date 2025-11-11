@@ -3,45 +3,58 @@ import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Pressable } from 'react-native';
+import { StyleSheet, Pressable, Image, ScrollView } from 'react-native'; // --- 1. Importar ScrollView ---
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 
 // Forzamos el tema oscuro
 const theme = 'dark';
 const themeColors = Colors[theme];
 
-// --- NUEVO: Componente de Ilustración SVG ---
-function HeroIllustration() {
+// --- NUEVO: Componente de Mockup de Cita ---
+// Esta es la "captura de pantalla falsa" que mencionaste
+function MockupPreview() {
   return (
-    <View style={styles.svgContainer}>
-      <Svg height="150" width="100%" viewBox="0 0 300 150">
-        <Defs>
-          <LinearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <Stop offset="0%" stopColor={themeColors.tint} stopOpacity="1" />
-            <Stop offset="100%" stopColor={themeColors.secondary} stopOpacity="1" />
-          </LinearGradient>
-          <LinearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor={themeColors.card} stopOpacity="0.1" />
-            <Stop offset="100%" stopColor={themeColors.card} stopOpacity="0.3" />
-          </LinearGradient>
-        </Defs>
-        {/* Forma Abstracta 1 (Fondo) */}
-        <Path
-          d="M-20 80 Q 50 20, 100 70 T 200 80 T 320 60 V 150 H -20 Z"
-          fill="url(#grad2)"
+    <View style={styles.mockupContainer}>
+      {/* Perfil Falso */}
+      <View style={styles.mockupProfileCard}>
+        <Image
+          // --- CORRECCIÓN DE RUTA ---
+          // Necesitamos subir 3 niveles: (tabs) -> (app) -> app -> raíz
+          source={require('../../../assets/images/mock_profile.png')}
+          // Por ahora, usamos un ícono
+          // source={{ uri: 'https://placehold.co/100x100/C039FF/FFFFFF?text=A&font=inter' }}
+          style={styles.mockupImage}
+          onError={(e) => console.log('Error loading local image', e.nativeEvent.error)}
         />
-        {/* Forma Abstracta 2 (Principal) */}
-        <Path
-          d="M-10 100 Q 60 50, 110 90 T 210 100 T 310 80 V 150 H -10 Z"
-          fill="url(#grad1)"
-        />
-      </Svg>
+        <Text style={styles.mockupName}>Amanda, 24</Text>
+        <Text style={styles.mockupBio}>
+          "Loves hiking, pineapple on pizza, and bad jokes."
+        </Text>
+      </View>
+
+      {/* Respuesta Falsa de Rizzflow */}
+      <View style={styles.mockupRizzBubble}>
+        <Text style={styles.mockupRizzLabel}>
+          <Ionicons name="sparkles" size={16} color={themeColors.tint} />
+          {' '}Rizzflow Suggestion
+        </Text>
+        <Text style={styles.mockupRizzText}>
+          "Are you a national park? Because I'd love to get lost exploring with you. (And I'll bring the pineapple pizza 🍍)"
+        </Text>
+      </View>
+
+      {/* Resultado Falso */}
+      <View style={styles.mockupMatchBubble}>
+        <Text style={styles.mockupMatchText}>
+          <Ionicons name="heart" size={16} color={themeColors.accentRed} />
+          {' '}New Match!
+        </Text>
+      </View>
     </View>
   );
 }
-// --- FIN: Componente de Ilustración SVG ---
+// --- FIN: Componente de Mockup de Cita ---
 
 export default function HomeScreen() {
   const goToRizz = () => {
@@ -50,27 +63,31 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      {/* --- 2. Cambiar View por ScrollView --- */}
+      <ScrollView 
+        style={styles.scrollContainer} 
+        contentContainerStyle={styles.contentContainer}
+      >
         
-        {/* --- Ilustración Añadida --- */}
-        <HeroIllustration />
+        {/* --- Mockup Añadido --- */}
+        <MockupPreview />
 
-        <Text style={styles.title}>Welcome to Rizzflow</Text>
-        <Text style={styles.subtitle}>Your personal social assistant.</Text>
+        <Text style={styles.title}>Welcome to Rizzflows</Text>
+        <Text style={styles.subtitle}>Your AI-powered dating assistant.</Text>
 
         <View style={[styles.infoCard, { backgroundColor: themeColors.card }]}>
           <Text style={[styles.cardTitle, { color: themeColors.tint }]}>
-            <Ionicons name="sparkles" size={20} color={themeColors.tint} />
+            <Ionicons name="flash" size={20} color={themeColors.tint} />
             {'  '}How it works:
           </Text>
           <Text style={styles.bulletPoint}>
             • **Upload any screenshot** (Tinder, Bumble, chat, etc.)
           </Text>
           <Text style={styles.bulletPoint}>
-            • Rizzflow generates **3-4 clever replies** instantly.
+            • Get **3-4 clever replies** generated by AI instantly.
           </Text>
           <Text style={styles.bulletPoint}>
-            • **Tap** the reply to copy and paste it into your chat.
+            • **Tap to copy** and paste it directly into your chat.
           </Text>
         </View>
 
@@ -81,11 +98,13 @@ export default function HomeScreen() {
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={styles.buttonGradient}>
-            <Text style={styles.buttonText}>Start Rizzing!!</Text>
+            <Text style={styles.buttonText}>Get Started</Text>
+            <Ionicons name="arrow-forward" size={20} color="white" style={{ marginLeft: 8 }}/>
           </ExpoLinearGradient>
         </Pressable>
 
-      </View>
+      </ScrollView>
+      {/* --- 2. Fin del cambio --- */}
     </SafeAreaView>
   );
 }
@@ -95,40 +114,112 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: themeColors.background,
   },
-  container: {
+  // --- 3. NUEVOS estilos para ScrollView ---
+  scrollContainer: {
     flex: 1,
+  },
+  contentContainer: {
+  // --- 3. Estilo 'container' renombrado y modificado ---
+    // flex: 1, // <--- Eliminado
     paddingHorizontal: 20,
     alignItems: 'center',
     backgroundColor: themeColors.background,
+    paddingTop: 10,
+    paddingBottom: 40, // <--- Añadido padding inferior
   },
-  // --- NUEVO: Estilo para el SVG ---
-  svgContainer: {
+  // --- NUEVO: Estilos para el Mockup ---
+  mockupContainer: {
     width: '100%',
-    maxHeight: 150,
+    backgroundColor: themeColors.card,
+    borderRadius: 24,
+    padding: 16,
+    alignItems: 'center',
     marginBottom: 20,
-    opacity: 0.8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
   },
+  mockupProfileCard: {
+    backgroundColor: themeColors.background,
+    borderRadius: 16,
+    padding: 12,
+    alignItems: 'center',
+    width: '90%',
+  },
+  mockupImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: themeColors.tint,
+  },
+  mockupName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: themeColors.text,
+  },
+  mockupBio: {
+    fontSize: 14,
+    color: themeColors.icon,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  mockupRizzBubble: {
+    backgroundColor: 'rgba(192, 57, 255, 0.15)', // Fondo púrpura claro
+    borderRadius: 12,
+    padding: 12,
+    width: '100%',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: themeColors.tint,
+  },
+  mockupRizzLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: themeColors.tint,
+    marginBottom: 4,
+  },
+  mockupRizzText: {
+    fontSize: 14,
+    color: themeColors.text,
+    fontStyle: 'italic',
+  },
+  mockupMatchBubble: {
+    backgroundColor: 'rgba(255, 59, 48, 0.15)', // Fondo rojo claro
+    borderRadius: 99,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: themeColors.accentRed,
+  },
+  mockupMatchText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: themeColors.accentRed,
+  },
+  // --- FIN: Estilos Mockup ---
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: themeColors.text,
     marginBottom: 5,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: themeColors.icon,
-    marginBottom: 30,
+    marginBottom: 25,
     textAlign: 'center',
   },
   infoCard: {
     width: '100%',
     padding: 20,
-    borderRadius: 16, // Más redondeado
+    borderRadius: 16,
     backgroundColor: themeColors.card,
     borderColor: themeColors.border,
     borderWidth: 1,
-    marginBottom: 30,
+    marginBottom: 25,
   },
   cardTitle: {
     fontSize: 20,
@@ -144,7 +235,7 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: 99, // Botón tipo "pill"
     marginTop: 10,
     shadowColor: themeColors.tint, // Sombra de color
     shadowOffset: { width: 0, height: 4 },
@@ -158,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 99, // Botón tipo "pill"
     width: '100%',
   },
   buttonText: {

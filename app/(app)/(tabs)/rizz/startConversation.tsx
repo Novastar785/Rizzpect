@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics'; // --- 1. Importar Haptics ---
+import * as Haptics from 'expo-haptics'; 
 
 LogBox.ignoreLogs([
   '[expo-image-picker] `ImagePicker.MediaTypeOptions` have been deprecated',
@@ -42,7 +42,7 @@ export default function ReplySuggestionsScreen() {
   const [inputFocused, setInputFocused] = useState(false);
 
   const pickImage = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // <-- Haptic on button press
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
@@ -67,20 +67,17 @@ export default function ReplySuggestionsScreen() {
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
-    // --- 2. Añadir Haptic de Éxito ---
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Copied!', 'The text has been copied to your clipboard.');
+    // Usamos un toast o indicador más sutil en el futuro, por ahora Alert está bien.
+    // Alert.alert('Copied!', 'The text has been copied to your clipboard.');
   };
 
-  // --- NUEVO: Función para manejar el Tono con Haptic ---
   const handleToneSelect = (tone: string) => {
-    // --- 4. Añadir Haptic Ligero ---
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedTone(tone);
   }
 
   const handleGenerateRizz = async () => {
-    // --- 3. Añadir Haptic de Impacto ---
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (!GEMINI_API_KEY) {
@@ -238,7 +235,7 @@ export default function ReplySuggestionsScreen() {
           ]}>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g., 'She said she loves pineapple on pizza, what do I say back?'"
+              placeholder="e.g., 'She said she loves pineapple on pizza...'"
               placeholderTextColor={themeColors.icon}
               multiline
               value={prompt}
@@ -248,12 +245,12 @@ export default function ReplySuggestionsScreen() {
               onBlur={() => setInputFocused(false)}
             />
             <Text style={styles.charCounter}>
-              {MAX_PROMPT_LENGTH - prompt.length} / {MAX_PROMPT_LENGTH}
+              {MAX_PROMPT_LENGTH - prompt.length}
             </Text>
           </View>
 
           <View style={styles.tonalityContainer}>
-            <Text style={styles.tonalityLabel}>Tonality</Text>
+            <Text style={styles.tonalityLabel}>Select Tonality</Text>
             <View style={styles.toneButtonRow}>
               {TONES.map((tone) => (
                 <Pressable
@@ -262,7 +259,6 @@ export default function ReplySuggestionsScreen() {
                     styles.toneButton,
                     selectedTone === tone && styles.toneButtonActive,
                   ]}
-                  // --- CAMBIO: Usar la nueva función con Haptic ---
                   onPress={() => handleToneSelect(tone)}>
                   <Text
                     style={[
@@ -303,6 +299,7 @@ export default function ReplySuggestionsScreen() {
 
           {results.length > 0 && (
             <View style={styles.resultContainer}>
+              <Text style={styles.resultsTitle}>Tap to copy:</Text>
               {results.map((line, index) => (
                 <Pressable
                   key={index}
@@ -312,7 +309,7 @@ export default function ReplySuggestionsScreen() {
                   <Ionicons
                     name="copy-outline"
                     size={18}
-                    color={themeColors.tint}
+                    color={themeColors.icon} // Color de ícono más sutil
                   />
                 </Pressable>
               ))}
@@ -337,7 +334,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scrollContainer: {
-    // --- CORRECCIÓN: flexGrow eliminado, paddingBottom añadido ---
     paddingBottom: 100,
   },
   orText: {
@@ -375,8 +371,8 @@ const styles = StyleSheet.create({
   textInputContainer: {
     marginBottom: 20,
     backgroundColor: themeColors.card,
-    borderColor: themeColors.border, // Color por defecto
-    borderWidth: 1.5, // Ligeramente más grueso
+    borderColor: themeColors.border, 
+    borderWidth: 1.5, 
     borderRadius: 12,
   },
   textInput: {
@@ -434,26 +430,27 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  // --- FIN DE LA CORRECCIÓN ---
+  // --- CAMBIO: Botones tipo "pill" ---
   buttonWrapper: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: 99, // Pill shape
     marginTop: 10,
-    shadowColor: themeColors.tint, // Sombra de color
+    shadowColor: themeColors.tint, 
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 8,
-    marginBottom: 15, // Espacio entre botones
+    marginBottom: 15, 
   },
   buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 99, // Pill shape
     width: '100%',
   },
+  // --- FIN DEL CAMBIO ---
   buttonText: {
     color: 'white',
     fontSize: 18,
@@ -466,22 +463,32 @@ const styles = StyleSheet.create({
   resultContainer: {
     marginTop: 20,
   },
+  // --- NUEVO: Título de resultados ---
+  resultsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.icon,
+    marginBottom: 10,
+  },
+  // --- CAMBIO: Estilo de "pillResult" mejorado ---
   pillResult: {
     backgroundColor: themeColors.card,
     borderRadius: 12,
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderColor: themeColors.border,
+    borderLeftColor: themeColors.tint, // Borde de acento izquierdo
+    borderLeftWidth: 3, // Ancho del borde de acento
     borderWidth: 1,
     marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 2,
   },
   pillResultText: {
     fontSize: 16,

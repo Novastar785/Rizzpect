@@ -5,12 +5,17 @@ import { StyleSheet, useColorScheme, ScrollView, Pressable, Alert, ActivityIndic
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase'; // Para el fulfillment
+import { LinearGradient } from 'expo-linear-gradient'; // Importar gradiente
 
 // NOTA IMPORTANTE: Para que este código funcione, debes instalar:
 // npx expo install expo-in-app-purchases
+// Y también:
+// npx expo install expo-linear-gradient
 
 // --- Tipos definidos ---
 type ThemeKey = 'light' | 'dark';
+const theme = 'dark'; // Forzar tema oscuro
+const themeColors = Colors[theme];
 
 // El tipo de Producto REAL de Expo
 type ExpoProduct = {
@@ -48,13 +53,13 @@ const PRODUCT_IDS = [
 // --- Definiciones Lógicas ---
 const DEFINITIONS: ProductDefinition[] = [
     // Packs de Créditos
-    { id: 'rizz_5', flow: 5, tag: 'Starter', isSubscription: false, storeDetails: null },
-    { id: 'rizz_35', flow: 35, tag: 'Best Value', isSubscription: false, storeDetails: null },
-    { id: 'rizz_70', flow: 70, tag: 'Bulk Buy', isSubscription: false, storeDetails: null },
+    { id: 'rizz_5', flow: 5, tag: 'Starter', icon: 'leaf-outline', isSubscription: false, storeDetails: null },
+    { id: 'rizz_35', flow: 35, tag: 'Best Value', icon: 'star-outline', isSubscription: false, storeDetails: null },
+    { id: 'rizz_70', flow: 70, tag: 'Bulk Buy', icon: 'rocket-outline', isSubscription: false, storeDetails: null },
     // Suscripciones
     { id: 'pro_weekly', name: 'Weekly Pro Access', benefit: 'Unlimited Interactions', icon: 'flash-outline', isSubscription: true, storeDetails: null },
     { id: 'monster_monthly', name: 'Monthly Monster Access', benefit: 'Unlimited Interactions + Priority', icon: 'flame-outline', isSubscription: true, storeDetails: null },
-    { id: 'premium_yearly', name: 'Yearly Premium Access', benefit: 'VIP Full Access', icon: 'sparkles', isSubscription: true, storeDetails: null },
+    { id: 'premium_yearly', name: 'Yearly Premium Access', benefit: 'VIP Full Access', icon: 'sparkles-outline', isSubscription: true, storeDetails: null },
 ];
 // -----------------------------
 
@@ -116,57 +121,74 @@ const handlePurchase = async (product: ProductDefinition) => {
 // ---------------------------------
 
 
-const ProductCard = ({ product, theme }: { product: ProductDefinition, theme: ThemeKey }) => {
+const ProductCard = ({ product }: { product: ProductDefinition }) => {
   const styles = getStyles(theme);
-  const tintColor = Colors[theme].tint;
+  const tintColor = themeColors.tint;
   
   const title = product.isSubscription ? product.name : `${product.flow} Rizzflow Credits`;
   const subtitle = product.isSubscription ? product.benefit : `Pay-as-you-go interactions`;
-
-  // Muestra el precio real del store, si está disponible
+  const isBestValue = product.tag === 'Best Value';
   const priceDisplay = product.storeDetails ? product.storeDetails.price : '...';
 
-  return (
+  const cardContent = (
     <Pressable 
-        style={styles.cardContainer}
-        onPress={() => product.storeDetails && handlePurchase(product)} // Solo activo si los detalles están cargados
+        style={[
+            styles.card,
+            { 
+              borderColor: isBestValue ? tintColor : themeColors.border,
+              opacity: product.storeDetails ? 1 : 0.6
+            }
+        ]}
+        onPress={() => product.storeDetails && handlePurchase(product)}
         disabled={!product.storeDetails}
     >
-      <View style={[styles.card, { 
-          backgroundColor: Colors[theme].card, 
-          borderColor: product.isSubscription ? tintColor : Colors[theme].border,
-          opacity: product.storeDetails ? 1 : 0.6 // Opacidad si no está cargado
-      }]}>
-        <View style={styles.cardHeader}>
-          {product.isSubscription && product.icon && <Ionicons name={product.icon} size={24} color={tintColor} />}
-          <Text style={[styles.cardTitle, { color: Colors[theme].text }]}>{title}</Text>
-        </View>
-        
-        <Text style={[styles.cardSubtitle, { color: Colors[theme].icon }]}>
-          {subtitle}
-        </Text>
-
-        <Text style={[styles.priceText, { color: tintColor }]}>
-          {priceDisplay}
-        </Text>
-        
-        {product.tag && (
-          <View style={[styles.tag, { backgroundColor: tintColor }]}>
-            <Text style={styles.tagText}>{product.tag}</Text>
-          </View>
-        )}
+      <View style={styles.cardHeader}>
+        {product.icon && <Ionicons name={product.icon} size={24} color={tintColor} />}
+        <Text style={styles.cardTitle}>{title}</Text>
       </View>
+      
+      <Text style={styles.cardSubtitle}>
+        {subtitle}
+      </Text>
+
+      <Text style={[styles.priceText, { color: isBestValue ? tintColor : themeColors.text }]}>
+        {priceDisplay}
+      </Text>
+      
+      {product.tag && (
+        <View style={[styles.tag, { backgroundColor: isBestValue ? tintColor : themeColors.secondary }]}>
+          <Text style={styles.tagText}>{product.tag}</Text>
+        </View>
+      )}
     </Pressable>
+  );
+
+  // --- NUEVO: Añadir gradiente al "Best Value" ---
+  if (isBestValue) {
+    return (
+      <LinearGradient
+        colors={[`${tintColor}40`, `${tintColor}00`]} // Gradiente púrpura sutil
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.cardContainer}
+      >
+        {cardContent}
+      </LinearGradient>
+    );
+  }
+
+  return (
+    <View style={styles.cardContainer}>
+      {cardContent}
+    </View>
   );
 };
 
 
 export default function StoreScreen() {
-  const colorScheme = useColorScheme() ?? 'light';
-  const styles = getStyles(colorScheme);
-  const tintColor = Colors[colorScheme].tint;
+  const styles = getStyles(theme);
+  const tintColor = themeColors.tint;
   
-  // Estado para los productos con los detalles reales del store
   const [products, setProducts] = useState<ProductDefinition[]>(DEFINITIONS);
   const [loading, setLoading] = useState(true);
 
@@ -230,39 +252,35 @@ export default function StoreScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Rizzflow Store</Text>
+        <Text style={styles.title}>Rizzflows Store</Text>
         
-        {/* --- Credit Explanation --- */}
-        <View style={[styles.explanationBox, { borderColor: tintColor, backgroundColor: Colors[colorScheme].card }]}>
-          <Text style={[styles.explanationText, { color: Colors[colorScheme].text }]}>
+        <View style={[styles.explanationBox, { borderColor: tintColor, backgroundColor: themeColors.card }]}>
+          <Text style={styles.explanationText}>
             <Ionicons name="information-circle-outline" size={16} color={tintColor} /> 
             {' '}1 Rizzflow credit = 1 AI interaction. Buy packs or subscribe for unlimited access!
           </Text>
         </View>
         
-        {/* --- Loading State --- */}
         {loading ? (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={tintColor} />
-                <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text, marginTop: 15 }]}>
+                <Text style={[styles.sectionTitle, { marginTop: 15 }]}>
                     Loading store products...
                 </Text>
             </View>
         ) : (
             <>
-                {/* --- Credit Packs Section --- */}
-                <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text }]}>Credit Packs (One-Time Purchase)</Text>
+                <Text style={styles.sectionTitle}>Credit Packs (One-Time Purchase)</Text>
                 <View style={styles.productGrid}>
                     {creditPacks.map((p) => (
-                        <ProductCard key={p.id} product={p} theme={colorScheme} />
+                        <ProductCard key={p.id} product={p} />
                     ))}
                 </View>
                 
-                {/* --- Subscription Section --- */}
-                <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text, marginTop: 25 }]}>Unlimited Subscriptions</Text>
+                <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Unlimited Subscriptions</Text>
                 <View style={styles.productGrid}>
                     {subscriptions.map((p) => (
-                        <ProductCard key={p.id} product={p} theme={colorScheme} />
+                        <ProductCard key={p.id} product={p} />
                     ))}
                 </View>
             </>
@@ -278,7 +296,7 @@ const getStyles = (theme: ThemeKey) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: Colors[theme].background,
+      backgroundColor: themeColors.background,
     },
     container: {
       flex: 1,
@@ -290,7 +308,7 @@ const getStyles = (theme: ThemeKey) =>
     title: {
       fontSize: 30,
       fontWeight: 'bold',
-      color: Colors[theme].text,
+      color: themeColors.text,
       marginBottom: 10,
       textAlign: 'center',
     },
@@ -303,11 +321,13 @@ const getStyles = (theme: ThemeKey) =>
     explanationText: {
       fontSize: 14,
       fontWeight: '500',
+      color: themeColors.text
     },
     sectionTitle: {
       fontSize: 20,
       fontWeight: 'bold',
       marginBottom: 15,
+      color: themeColors.text,
     },
     productGrid: {
       flexDirection: 'row',
@@ -317,15 +337,18 @@ const getStyles = (theme: ThemeKey) =>
     cardContainer: {
       width: '48%', 
       marginBottom: 15,
+      borderRadius: 12, // Añadido para el gradiente
+      overflow: 'hidden', // Añadido para el gradiente
     },
     card: {
+      backgroundColor: themeColors.card,
       padding: 15,
       borderRadius: 12,
       borderWidth: 1.5,
-      minHeight: 150,
+      minHeight: 160, // Aumentar altura
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
+      shadowOpacity: 0.1,
       shadowRadius: 3,
       elevation: 2,
     },
@@ -333,21 +356,27 @@ const getStyles = (theme: ThemeKey) =>
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 5,
+        backgroundColor: 'transparent', // Asegurar fondo transparente
     },
     cardTitle: {
       fontSize: 16,
       fontWeight: 'bold',
+      color: themeColors.text,
       marginLeft: 5,
       flexShrink: 1,
     },
     cardSubtitle: {
       fontSize: 12,
       marginBottom: 10,
+      color: themeColors.icon,
+      backgroundColor: 'transparent', // Asegurar fondo transparente
     },
     priceText: {
       fontSize: 24,
       fontWeight: '900',
       marginTop: 'auto', 
+      color: themeColors.text,
+      backgroundColor: 'transparent', // Asegurar fondo transparente
     },
     tag: {
       position: 'absolute',

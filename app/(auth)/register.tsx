@@ -1,4 +1,4 @@
-import { Text, View } from '@/components/Themed'; // ¡Usamos Themed!
+import { Text, View } from '@/components/Themed'; 
 import Colors from '@/constants/Colors';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,27 +12,31 @@ import {
   Pressable,
   StyleSheet,
   TextInput,
+  ActivityIndicator, 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient'; // --- NUEVO: Importar gradiente
+import { LinearGradient } from 'expo-linear-gradient'; 
 
 // Forzamos el tema oscuro
 const theme = 'dark';
 const themeColors = Colors[theme];
 
 export default function RegisterScreen() {
+  const [name, setName] = useState(''); // --- NUEVO: Estado para el nombre ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false); 
 
-  // --- NUEVO: Estado de "focus" para los inputs ---
+  const [nameFocused, setNameFocused] = useState(false); // --- NUEVO ---
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmFocused, setConfirmFocused] = useState(false);
 
 
   async function handleRegister() {
-    if (!email || !password || !confirmPassword) {
+    // --- CAMBIO: Añadir !name a la validación ---
+    if (!name || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
@@ -40,10 +44,22 @@ export default function RegisterScreen() {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
+    setLoading(true); 
+    
+    // --- CAMBIO: Añadir 'options: { data: { name } }' ---
     const { error } = await supabase.auth.signUp({
       email: email,
       password: password,
+      options: {
+        data: {
+          name: name, // Esto se pasará al trigger de Supabase
+        }
+      }
     });
+    // --- FIN DEL CAMBIO ---
+    
+    setLoading(false); 
+
     if (error) {
       Alert.alert('Error Registering', error.message);
     } else {
@@ -66,8 +82,36 @@ export default function RegisterScreen() {
           style={styles.heroImage}
         />
         <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>
+          Get started with
+          <Text style={styles.link}> Rizzflows</Text>
+        </Text>
 
-        {/* --- CAMBIO: Input con estilo de focus --- */}
+        {/* --- NUEVO: Campo de Nombre --- */}
+        <View style={[
+          styles.inputContainer,
+          { borderColor: nameFocused ? themeColors.tint : themeColors.border }
+        ]}>
+          <Ionicons
+            name="person-outline"
+            size={20}
+            color={nameFocused ? themeColors.tint : themeColors.icon}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Your Name"
+            placeholderTextColor={themeColors.icon}
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            onFocus={() => setNameFocused(true)}
+            onBlur={() => setNameFocused(false)}
+            editable={!loading}
+          />
+        </View>
+        {/* --- FIN DEL NUEVO CAMPO --- */}
+
         <View style={[
           styles.inputContainer,
           { borderColor: emailFocused ? themeColors.tint : themeColors.border }
@@ -75,7 +119,7 @@ export default function RegisterScreen() {
           <Ionicons
             name="mail-outline"
             size={20}
-            color={themeColors.icon}
+            color={emailFocused ? themeColors.tint : themeColors.icon} 
             style={styles.inputIcon}
           />
           <TextInput
@@ -88,10 +132,10 @@ export default function RegisterScreen() {
             keyboardType="email-address"
             onFocus={() => setEmailFocused(true)}
             onBlur={() => setEmailFocused(false)}
+            editable={!loading} 
           />
         </View>
 
-        {/* --- CAMBIO: Input con estilo de focus --- */}
         <View style={[
           styles.inputContainer,
           { borderColor: passwordFocused ? themeColors.tint : themeColors.border }
@@ -99,7 +143,7 @@ export default function RegisterScreen() {
           <Ionicons
             name="lock-closed-outline"
             size={20}
-            color={themeColors.icon}
+            color={passwordFocused ? themeColors.tint : themeColors.icon} 
             style={styles.inputIcon}
           />
           <TextInput
@@ -112,10 +156,10 @@ export default function RegisterScreen() {
             secureTextEntry
             onFocus={() => setPasswordFocused(true)}
             onBlur={() => setPasswordFocused(false)}
+            editable={!loading} 
           />
         </View>
 
-        {/* --- CAMBIO: Input con estilo de focus --- */}
         <View style={[
           styles.inputContainer,
           { borderColor: confirmFocused ? themeColors.tint : themeColors.border }
@@ -123,7 +167,7 @@ export default function RegisterScreen() {
           <Ionicons
             name="lock-closed-outline"
             size={20}
-            color={themeColors.icon}
+            color={confirmFocused ? themeColors.tint : themeColors.icon} 
             style={styles.inputIcon}
           />
           <TextInput
@@ -136,22 +180,33 @@ export default function RegisterScreen() {
             secureTextEntry
             onFocus={() => setConfirmFocused(true)}
             onBlur={() => setConfirmFocused(false)}
+            editable={!loading} 
           />
         </View>
 
-        {/* --- CAMBIO: Botón con Gradiente --- */}
-        <Pressable style={styles.buttonWrapper} onPress={handleRegister}>
+        <Pressable 
+          style={styles.buttonWrapper} 
+          onPress={handleRegister}
+          disabled={loading} 
+        >
           <LinearGradient
             colors={[themeColors.tint, themeColors.secondary]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={styles.buttonGradient}>
-            <Text style={styles.buttonText}>Register</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Register</Text>
+            )}
           </LinearGradient>
         </Pressable>
-        {/* --- FIN CAMBIO --- */}
 
-        <Pressable style={styles.linkButton} onPress={() => router.back()}>
+        <Pressable 
+          style={styles.linkButton} 
+          onPress={() => router.back()}
+          disabled={loading} 
+        >
           <Text style={[styles.linkButtonText, { color: themeColors.icon }]}>
             Already have an account?{' '}
             <Text style={{ color: themeColors.tint, fontWeight: 'bold' }}>
@@ -164,7 +219,7 @@ export default function RegisterScreen() {
   );
 }
 
-// Usamos los mismos estilos de Login para consistencia
+// ... los estilos permanecen igual, solo añado el paddingRight al input ...
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -178,8 +233,8 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.background,
   },
   heroImage: {
-    width: 200, // Ajustado
-    height: 200, // Ajustado
+    width: 150, // Más pequeño
+    height: 150, // Más pequeño
     resizeMode: 'contain',
     marginBottom: 20,
   },
@@ -187,15 +242,25 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: themeColors.text,
-    marginBottom: 30,
+    marginBottom: 10, // Reducido
+  },
+  subtitle: {
+    fontSize: 16,
+    color: themeColors.icon,
+    textAlign: 'center',
+    marginBottom: 30, // Reducido
+  },
+  link: {
+    color: themeColors.tint,
+    fontWeight: 'bold',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     backgroundColor: themeColors.card,
-    borderWidth: 1.5, // Ligeramente más grueso para el "glow"
-    borderColor: themeColors.border, // Color por defecto
+    borderWidth: 1.5, 
+    borderColor: themeColors.border, 
     borderRadius: 12,
     marginBottom: 20,
   },
@@ -207,13 +272,13 @@ const styles = StyleSheet.create({
     height: 50,
     fontSize: 16,
     color: themeColors.text,
+    paddingRight: 10,
   },
-  // --- NUEVO: Estilos para el botón de gradiente ---
   buttonWrapper: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: 99, // --- CAMBIO: Pill shape ---
     marginTop: 10,
-    shadowColor: themeColors.tint, // Sombra de color
+    shadowColor: themeColors.tint, 
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -224,9 +289,8 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 99, // --- CAMBIO: Pill shape ---
   },
-  // --- FIN NUEVO ---
   buttonText: {
     color: 'white',
     fontSize: 18,
@@ -237,6 +301,6 @@ const styles = StyleSheet.create({
   },
   linkButtonText: {
     fontSize: 16,
-    color: themeColors.icon, // Color base
+    color: themeColors.icon,
   },
 });

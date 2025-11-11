@@ -17,7 +17,8 @@ import {
   LogBox,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient'; // --- NUEVO: Importar gradiente
+import { LinearGradient } from 'expo-linear-gradient'; 
+import * as Haptics from 'expo-haptics'; // Importar Haptics
 
 LogBox.ignoreLogs([
   '[expo-image-picker] `ImagePicker.MediaTypeOptions` have been deprecated',
@@ -27,7 +28,6 @@ LogBox.ignoreLogs([
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 const MAX_PROMPT_LENGTH = 600;
-// --- CAMBIO: Tono "Spicy" añadido ---
 const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant', 'Spicy'];
 
 // Forzamos el tema oscuro
@@ -44,11 +44,10 @@ export default function ReplySuggestionsScreen() {
     useState<ImagePicker.ImagePickerAsset | null>(null);
   const [selectedTone, setSelectedTone] = useState(TONES[0]);
 
-  // --- NUEVO: Estado de focus para el input ---
   const [inputFocused, setInputFocused] = useState(false);
 
   const pickImage = async () => {
-    // (Lógica de pickImage sin cambios...)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // Haptic
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
@@ -72,13 +71,20 @@ export default function ReplySuggestionsScreen() {
   };
 
   const copyToClipboard = async (text: string) => {
-    // (Lógica de copyToClipboard sin cambios...)
     await Clipboard.setStringAsync(text);
-    Alert.alert('Copied!', 'The text has been copied to your clipboard.');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // Haptic
+    // Alert.alert('Copied!', 'The text has been copied to your clipboard.');
   };
 
+  // Función Haptic para el tono
+  const handleToneSelect = (tone: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedTone(tone);
+  }
+
   const handleGenerateRizz = async () => {
-    // (Lógica de la API sin cambios...)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // Haptic
+    
     if (!GEMINI_API_KEY) {
       Alert.alert(
         'API Key Missing',
@@ -98,7 +104,6 @@ export default function ReplySuggestionsScreen() {
     setLoading(true);
     setResults([]);
 
-    // --- CAMBIO: Ajuste del system prompt para "Spicy" ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 witty, clever, or engaging replies to a message the user received.
     Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
@@ -195,13 +200,11 @@ export default function ReplySuggestionsScreen() {
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
         >
-          {/* --- CAMBIO: Botón "Upload" ahora con gradiente y sombra --- */}
           <Pressable
-            style={[styles.buttonWrapper, { marginBottom: 15 }]} // Usa el mismo wrapper y añade margen
+            style={[styles.buttonWrapper, { marginBottom: 15 }]} 
             onPress={pickImage}
             disabled={loading}>
             <LinearGradient
-              // Usamos el mismo gradiente para consistencia
               colors={[themeColors.tint, themeColors.secondary]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
@@ -220,7 +223,7 @@ export default function ReplySuggestionsScreen() {
               <Pressable
                 style={styles.removeImageButton}
                 onPress={() => setSelectedImage(null)}>
-                <Ionicons name="close-circle" size={24} color="#FF3B30" />
+                <Ionicons name="close-circle" size={24} color={themeColors.accentRed} />
               </Pressable>
             </View>
           )}
@@ -231,14 +234,13 @@ export default function ReplySuggestionsScreen() {
             Upload a screenshot, or type the last message you received:
           </Text>
 
-          {/* --- CAMBIO: Input con estilo de focus --- */}
           <View style={[
             styles.textInputContainer,
             { borderColor: inputFocused ? themeColors.tint : themeColors.border }
           ]}>
             <TextInput
               style={styles.textInput}
-              placeholder="e.g., 'She said she loves pineapple on pizza, what do I say back?'"
+              placeholder="e.g., 'She said she loves pineapple on pizza...'"
               placeholderTextColor={themeColors.icon}
               multiline
               value={prompt}
@@ -248,12 +250,12 @@ export default function ReplySuggestionsScreen() {
               onBlur={() => setInputFocused(false)}
             />
             <Text style={styles.charCounter}>
-              {MAX_PROMPT_LENGTH - prompt.length} / {MAX_PROMPT_LENGTH}
+              {MAX_PROMPT_LENGTH - prompt.length}
             </Text>
           </View>
 
           <View style={styles.tonalityContainer}>
-            <Text style={styles.tonalityLabel}>Tonality</Text>
+            <Text style={styles.tonalityLabel}>Select Tonality</Text>
             <View style={styles.toneButtonRow}>
               {TONES.map((tone) => (
                 <Pressable
@@ -262,7 +264,7 @@ export default function ReplySuggestionsScreen() {
                     styles.toneButton,
                     selectedTone === tone && styles.toneButtonActive,
                   ]}
-                  onPress={() => setSelectedTone(tone)}>
+                  onPress={() => handleToneSelect(tone)}>
                   <Text
                     style={[
                       styles.toneButtonText,
@@ -275,7 +277,6 @@ export default function ReplySuggestionsScreen() {
             </View>
           </View>
 
-          {/* --- CAMBIO: Botón con Gradiente --- */}
           <Pressable
             style={styles.buttonWrapper}
             onPress={handleGenerateRizz}
@@ -291,7 +292,6 @@ export default function ReplySuggestionsScreen() {
               </Text>
             </LinearGradient>
           </Pressable>
-          {/* --- FIN CAMBIO --- */}
 
           {loading && (
             <ActivityIndicator
@@ -303,6 +303,8 @@ export default function ReplySuggestionsScreen() {
 
           {results.length > 0 && (
             <View style={styles.resultContainer}>
+              {/* --- NUEVO: Título de resultados --- */}
+              <Text style={styles.resultsTitle}>Tap to copy:</Text>
               {results.map((line, index) => (
                 <Pressable
                   key={index}
@@ -312,7 +314,7 @@ export default function ReplySuggestionsScreen() {
                   <Ionicons
                     name="copy-outline"
                     size={18}
-                    color={themeColors.tint}
+                    color={themeColors.icon} // Color de ícono más sutil
                   />
                 </Pressable>
               ))}
@@ -324,7 +326,7 @@ export default function ReplySuggestionsScreen() {
   );
 }
 
-// Estilos actualizados para el tema oscuro (idénticos a startConversation)
+// Estilos actualizados para el tema oscuro
 const getStyles = (theme: 'light' | 'dark') =>
   StyleSheet.create({
     safeArea: {
@@ -339,8 +341,7 @@ const getStyles = (theme: 'light' | 'dark') =>
       padding: 20,
     },
     scrollContainer: {
-    // --- CAMBIO: flexGrow eliminado, paddingBottom añadido ---
-    paddingBottom: 100,
+      paddingBottom: 100,
     },
     orText: {
       fontSize: 16,
@@ -349,7 +350,6 @@ const getStyles = (theme: 'light' | 'dark') =>
       marginBottom: 15,
       fontWeight: 'bold',
     },
-    // --- ESTILOS RESTAURADOS ---
     previewContainer: {
       marginBottom: 15,
       alignItems: 'center',
@@ -378,8 +378,8 @@ const getStyles = (theme: 'light' | 'dark') =>
     textInputContainer: {
       marginBottom: 20,
       backgroundColor: themeColors.card,
-      borderColor: themeColors.border, // Color por defecto
-      borderWidth: 1.5, // Ligeramente más grueso
+      borderColor: themeColors.border, 
+      borderWidth: 1.5, 
       borderRadius: 12,
     },
     textInput: {
@@ -419,7 +419,6 @@ const getStyles = (theme: 'light' | 'dark') =>
       paddingHorizontal: 16,
       borderRadius: 99,
       margin: 4,
-      // Sombra añadida
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
@@ -438,7 +437,6 @@ const getStyles = (theme: 'light' | 'dark') =>
       color: '#FFFFFF',
       fontWeight: 'bold',
     },
-    // --- FIN DE ESTILOS RESTAURADOS ---
     buttonWrapper: {
       width: '100%',
       borderRadius: 99,
@@ -456,7 +454,6 @@ const getStyles = (theme: 'light' | 'dark') =>
       borderRadius: 99,
       width: '100%',
     },
-    // --- FIN NUEVO ---
     buttonText: {
       color: 'white',
       fontSize: 18,
@@ -470,19 +467,29 @@ const getStyles = (theme: 'light' | 'dark') =>
       marginTop: 20,
       marginBottom: 50,
     },
+    // --- NUEVO: Título de resultados ---
+    resultsTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themeColors.icon,
+      marginBottom: 10,
+    },
+    // --- CAMBIO: Estilo de "pillResult" mejorado ---
     pillResult: {
       backgroundColor: themeColors.card,
       borderRadius: 12,
       paddingVertical: 15,
       paddingHorizontal: 20,
       borderColor: themeColors.border,
+      borderLeftColor: themeColors.tint, // Borde de acento izquierdo
+      borderLeftWidth: 3, // Ancho del borde de acento
       borderWidth: 1,
       marginBottom: 10,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 2,
       elevation: 2,

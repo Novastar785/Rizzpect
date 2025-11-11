@@ -14,16 +14,37 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const theme = 'dark';
 const themeColors = Colors[theme];
 
+// --- NUEVO: Colores de íconos para dar vida a la lista ---
+const iconColors = {
+  start: themeColors.tint, // Púrpura
+  reply: themeColors.secondary, // Azul
+  awkward: themeColors.accentGreen, // Verde
+  pickup: themeColors.accentRed, // Rojo
+};
+
+// --- NUEVO: Componente de tarjeta de Rizz ---
+const RizzCard = ({ href, icon, title, description, color }: { href: string, icon: any, title: string, description: string, color: string }) => {
+  return (
+    <Link href={href as any} asChild>
+      <Pressable style={styles.card}>
+        <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
+          <Ionicons
+            name={icon}
+            size={24}
+            style={[styles.cardIcon, { color: color }]}
+          />
+        </View>
+        <View style={styles.cardTextContainer}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={styles.cardDescription}>{description}</Text>
+        </View>
+        <Ionicons name="chevron-forward-outline" size={20} color={themeColors.icon} />
+      </Pressable>
+    </Link>
+  );
+};
+
 export default function RizzScreen() {
-
-  // --- NUEVO: Colores de íconos para dar vida a la lista ---
-  const iconColors = {
-    start: themeColors.tint, // Púrpura
-    reply: themeColors.secondary, // Azul
-    awkward: '#5AB198', // Verde (El original)
-    pickup: themeColors.accentRed, // Rojo (Reemplaza al rosa)
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
@@ -31,55 +52,34 @@ export default function RizzScreen() {
         <Text style={styles.subtitle}>What can I help you with today?</Text>
 
         <View style={styles.buttonContainer}>
-          {/* --- CAMBIO: Ícono con color personalizado --- */}
-          <Link href="/(app)/(tabs)/rizz/startConversation" asChild>
-            <Pressable style={styles.pillButton}>
-              <Ionicons
-                name="chatbubbles-outline"
-                size={24}
-                style={[styles.pillButtonIcon, { color: iconColors.start }]}
-              />
-              <Text style={styles.pillButtonText}>Start a Conversation</Text>
-            </Pressable>
-          </Link>
-
-          {/* --- CAMBIO: Ícono con color personalizado --- */}
-          <Link href="/(app)/(tabs)/rizz/replySuggestions" asChild>
-            <Pressable style={styles.pillButton}>
-              <Ionicons
-                name="arrow-undo-outline"
-                size={24}
-                style={[styles.pillButtonIcon, { color: iconColors.reply }]}
-              />
-              <Text style={styles.pillButtonText}>Get Reply Suggestions</Text>
-            </Pressable>
-          </Link>
-
-          {/* --- CAMBIO: Ícono con color personalizado --- */}
-          <Link href="/(app)/(tabs)/rizz/awkwardSituation" asChild>
-            <Pressable style={styles.pillButton}>
-              <Ionicons
-                name="help-buoy-outline"
-                size={24}
-                style={[styles.pillButtonIcon, { color: iconColors.awkward }]}
-              />
-              <Text style={styles.pillButtonText}>
-                Help with Awkward Situation
-              </Text>
-            </Pressable>
-          </Link>
-
-          {/* --- CAMBIO: Ícono con color personalizado --- */}
-          <Link href="/(app)/(tabs)/rizz/pickupLines" asChild>
-            <Pressable style={styles.pillButton}>
-              <Ionicons
-                name="flame-outline"
-                size={24}
-                style={[styles.pillButtonIcon, { color: iconColors.pickup }]}
-              />
-              <Text style={styles.pillButtonText}>Banger Pickup Lines</Text>
-            </Pressable>
-          </Link>
+          <RizzCard
+            href="/(app)/(tabs)/rizz/startConversation"
+            icon="chatbubbles-outline"
+            title="Start a Conversation"
+            description="Break the ice with a perfect opener."
+            color={iconColors.start}
+          />
+          <RizzCard
+            href="/(app)/(tabs)/rizz/replySuggestions"
+            icon="arrow-undo-outline"
+            title="Get Reply Suggestions"
+            description="Analyze a screenshot and get clever replies."
+            color={iconColors.reply}
+          />
+          <RizzCard
+            href="/(app)/(tabs)/rizz/awkwardSituation"
+            icon="help-buoy-outline"
+            title="Awkward Situation"
+            description="Navigate tricky social moments smoothly."
+            color={iconColors.awkward}
+          />
+          <RizzCard
+            href="/(app)/(tabs)/rizz/pickupLines"
+            icon="flame-outline"
+            title="Banger Pickup Lines"
+            description="Generate lines that actually work."
+            color={iconColors.pickup}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -111,30 +111,46 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
   },
-  pillButton: {
+  // --- NUEVOS Estilos de Tarjeta ---
+  card: {
     backgroundColor: themeColors.card,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    borderRadius: 16, // Ligeramente menos redondeado, más "tarjeta"
+    padding: 16,
+    borderRadius: 16, 
     marginBottom: 15,
     borderWidth: 1,
     borderColor: themeColors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, // Sombra más sutil
+    shadowOpacity: 0.1, 
     shadowRadius: 4,
     elevation: 3,
   },
-  pillButtonIcon: {
-    // El color se aplica dinámicamente arriba
-    marginRight: 15,
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  pillButtonText: {
+  cardIcon: {
+    // El color se aplica dinámicamente
+  },
+  cardTextContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  cardTitle: {
     color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
-    flex: 1,
   },
+  cardDescription: {
+    color: themeColors.icon,
+    fontSize: 14,
+    marginTop: 2,
+  },
+  // --- FIN Estilos de Tarjeta ---
 });
