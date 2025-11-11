@@ -1,5 +1,5 @@
-import Colors from '../../constants/Colors'; // Corregido: Importación de Colors
-import { supabase } from '../../lib/supabase'; // Corregido: Importación de supabase
+import Colors from '../../constants/Colors'; 
+import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, Stack, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -19,7 +19,7 @@ export default function AppLayout() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // app.json fuerza "light", así que colorScheme será "light"
+  // app.json fuerza "light"
   const colorScheme = useColorScheme() ?? 'light';
   const tintColor = Colors[colorScheme].tint;
 
@@ -97,7 +97,7 @@ export default function AppLayout() {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* --- El "Stack Maestro" (Rutas eliminadas) --- */}
+      {/* --- El "Stack Maestro" (Modificado) --- */}
       <Stack
         screenOptions={{
           // Fondo de cabecera verde
@@ -110,48 +110,38 @@ export default function AppLayout() {
         <Stack.Screen
           name="(tabs)"
           options={{
-            headerShown: true,
-            headerTitle: '',
-            headerRight: () => (
-              <Pressable
-                onPress={() => setMenuVisible(true)}
-                style={{ marginRight: 15 }}>
-                <View style={styles.avatar}>
-                  {loading ? (
-                    <Ionicons
-                      name="person-circle-outline"
-                      size={30}
-                      color={tintColor} // Icono de carga en verde
-                    />
-                  ) : profile?.foto_url ? (
-                    <Image
-                      source={{ uri: profile.foto_url }}
-                      style={styles.avatarImage}
-                    />
-                  ) : (
-                    <Text style={styles.avatarLetter}>
-                      {(profile?.name || '?').charAt(0).toUpperCase()}
-                    </Text>
-                  )}
-                </View>
-              </Pressable>
-            ),
+            // --- CAMBIO 1: Ocultamos la cabecera del Stack que contiene las Tabs ---
+            headerShown: false,
+            // --- CAMBIO 2: Eliminamos el headerRight que contiene el icono de perfil ---
+            // headerRight: () => (
+            //   <Pressable
+            //     onPress={() => setMenuVisible(true)}
+            //     style={{ marginRight: 15 }}>
+            //     <View style={styles.avatar}>
+            //       {loading ? (
+            //         <Ionicons
+            //           name="person-circle-outline"
+            //           size={30}
+            //           color={tintColor}
+            //         />
+            //       ) : profile?.foto_url ? (
+            //         <Image
+            //           source={{ uri: profile.foto_url }}
+            //           style={styles.avatarImage}
+            //         />
+            //       ) : (
+            //         <Text style={styles.avatarLetter}>
+            //           {(profile?.name || '?').charAt(0).toUpperCase()}
+            //         </Text>
+            //       )}
+            //     </View>
+            //   </Pressable>
+            // ),
+            // headerTitle: '', // Ya no es necesario si headerShown: false
           }}
         />
         {/*
-          Rutas de Stack eliminadas:
-          <Stack.Screen
-            name="profile"
-            options={{
-              title: 'My Profile',
-            }}
-          />
-          <Stack.Screen
-            name="editProfile"
-            options={{
-              title: 'Edit Profile',
-            }}
-          />
+          Resto de rutas de Stack (si las hay)
         */}
       </Stack>
     </>
