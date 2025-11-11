@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  // app.json fuerza "light"
+  // app.json forces "light"
   const colorScheme = useColorScheme() ?? 'light';
 
   return (
@@ -14,13 +14,13 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors[colorScheme].tint, // Verde
+          backgroundColor: Colors[colorScheme].tint, // Green
           paddingBottom: insets.bottom,
           height: 60 + insets.bottom,
           borderTopWidth: 0,
         },
-        tabBarActiveTintColor: '#FFFFFF', // Blanco
-        tabBarInactiveTintColor: '#C0E1DC', // Verde claro
+        tabBarActiveTintColor: '#FFFFFF', // White
+        tabBarInactiveTintColor: '#C0E1DC', // Light green
       }}>
       <Tabs.Screen
         name="home"
@@ -32,32 +32,33 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="pets"
+        name="rizz"
         options={{
-          title: 'Pets',
+          title: 'Rizz',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="paw-outline" size={24} color={color} />
+            <Ionicons name="sparkles-outline" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="reminders"
+        name="store"
         options={{
-          title: 'Reminders',
+          title: 'Store',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="calendar-outline" size={24} color={color} />
+            <Ionicons name="cart-outline" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="care"
+        name="profile"
         options={{
-          title: 'Care',
+          title: 'Profile',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="medkit-outline" size={24} color={color} />
+            <Ionicons name="person-outline" size={24} color={color} />
           ),
         }}
       />
+      {/* Removed old pet/care/reminders tabs */}
     </Tabs>
   );
 }

@@ -4,25 +4,22 @@ import React from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// --- ENTIRE FILE REPLACED ---
-
-export default function HomeScreen() {
+export default function StoreScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const styles = getStyles(colorScheme);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Home Page</Text>
+        <Text style={styles.title}>Store</Text>
         <Text style={styles.subtitle}>
-          This is the main home screen placeholder.
+          This is the store screen placeholder.
         </Text>
       </View>
     </SafeAreaView>
   );
 }
 
-// Styles for the placeholder
 const getStyles = (theme: 'light' | 'dark') =>
   StyleSheet.create({
     safeArea: {
