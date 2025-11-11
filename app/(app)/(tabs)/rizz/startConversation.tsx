@@ -95,7 +95,8 @@ export default function StartConversationScreen() {
     setResults([]); // Clear previous results
 
     // --- UPDATED: System prompt is now much stricter ---
-    const systemPrompt = `You are "Rizzpect", a social assistant.
+    // (Usando el nombre "Rizzflow" de la conversación anterior)
+    const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 conversation starters based on the user's input.
     Your tone MUST be: ${selectedTone}.
     If an image is provided, base your suggestions on visual details.

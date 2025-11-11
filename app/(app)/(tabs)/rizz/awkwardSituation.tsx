@@ -57,7 +57,7 @@ export default function AwkwardSituationScreen() {
     setResults([]);
 
     // --- UPDATED: System prompt for "Awkward Situations" ---
-    const systemPrompt = `You are "Rizzpect", a social assistant.
+    const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 short, actionable pieces of advice or specific phrases to help the user navigate an awkward social situation they describe.
     Your tone MUST be: ${selectedTone}.
     The user will provide text describing the situation. Give them clear, concise ways to handle it or escape it smoothly.

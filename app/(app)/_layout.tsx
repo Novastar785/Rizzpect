@@ -1,5 +1,5 @@
-import Colors from '@/constants/Colors';
-import { supabase } from '@/lib/supabase';
+import Colors from '../../constants/Colors'; // Corregido: Importación de Colors
+import { supabase } from '../../lib/supabase'; // Corregido: Importación de supabase
 import { Ionicons } from '@expo/vector-icons';
 import { Link, Stack, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -54,7 +54,7 @@ export default function AppLayout() {
 
   return (
     <>
-      {/* --- El Menú Modal --- */}
+      {/* --- El Menú Modal (Simplificado para apuntar a /profile de la pestaña) --- */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -67,7 +67,8 @@ export default function AppLayout() {
                 styles.menuContainer,
                 { backgroundColor: Colors[colorScheme].background },
               ]}>
-              <Link href="/(app)/profile" asChild>
+              {/* Navegará a la pantalla de Profile dentro del Stack de Tabs */}
+              <Link href="/(app)/(tabs)/profile" asChild>
                 <Pressable
                   style={styles.menuButton}
                   onPress={() => setMenuVisible(false)}>
@@ -81,7 +82,7 @@ export default function AppLayout() {
                       styles.menuButtonText,
                       { color: Colors[colorScheme].text },
                     ]}>
-                    Profile
+                    My Profile
                   </Text>
                 </Pressable>
               </Link>
@@ -96,7 +97,7 @@ export default function AppLayout() {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* --- El "Stack Maestro" --- */}
+      {/* --- El "Stack Maestro" (Rutas eliminadas) --- */}
       <Stack
         screenOptions={{
           // Fondo de cabecera verde
@@ -137,18 +138,21 @@ export default function AppLayout() {
             ),
           }}
         />
-        <Stack.Screen
-          name="profile"
-          options={{
-            title: 'My Profile',
-          }}
-        />
-        <Stack.Screen
-          name="editProfile"
-          options={{
-            title: 'Edit Profile',
-          }}
-        />
+        {/*
+          Rutas de Stack eliminadas:
+          <Stack.Screen
+            name="profile"
+            options={{
+              title: 'My Profile',
+            }}
+          />
+          <Stack.Screen
+            name="editProfile"
+            options={{
+              title: 'Edit Profile',
+            }}
+          />
+        */}
       </Stack>
     </>
   );

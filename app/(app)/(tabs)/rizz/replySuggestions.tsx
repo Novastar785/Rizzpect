@@ -91,7 +91,7 @@ export default function ReplySuggestionsScreen() {
     setResults([]);
 
     // --- UPDATED: System prompt for "Get Replies" ---
-    const systemPrompt = `You are "Rizzpect", a social assistant.
+    const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 witty, clever, or engaging replies to a message the user received.
     Your tone MUST be: ${selectedTone}.
     If an image of a chat is provided, analyze the LAST MESSAGE in the screenshot and provide a reply for it.

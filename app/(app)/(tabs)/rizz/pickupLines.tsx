@@ -46,7 +46,7 @@ export default function PickupLinesScreen() {
     setResults([]);
 
     // --- UPDATED: System prompt for "Pickup Lines" ---
-    const systemPrompt = `You are "Rizzpect", a social assistant.
+    const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 creative "Banger Pickup Lines".
     Your tone MUST be: ${selectedTone}.
     The user is not providing any context other than the tone, so be creative.

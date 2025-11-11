@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Rizzpect",
-    "slug": "Rizzpect",
+    "name": "Rizzflow",
+    "slug": "rizzflow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rizzpect",
+    "scheme": "rizzflow",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
