@@ -9,22 +9,28 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      // "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#121212"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.rizzflow"
+      "bundleIdentifier": "com.anonymous.rizzflow",
+      "userInterfaceStyle": "dark"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#121212"
       },
+      "splash": {
+        "backgroundColor": "#121212",
+        "resizeMode": "contain"
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.rizzflow"
+      "package": "com.anonymous.rizzflow",
+      "userInterfaceStyle": "dark"
     },
     "web": {
       "bundler": "metro",

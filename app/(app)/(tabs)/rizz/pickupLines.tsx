@@ -2,48 +2,60 @@ import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Pressable,
   Alert,
-  ActivityIndicator,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient'; 
-import * as Haptics from 'expo-haptics'; // Importar Haptics
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import LottieView from 'lottie-react-native';
 
-// --- API Configuration ---
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
-const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant', 'Spicy']; // "Spicy" añadido
+const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant', 'Spicy'];
 
-// Forzamos el tema oscuro
 const theme = 'dark';
 const themeColors = Colors[theme];
 
 export default function PickupLinesScreen() {
-  const styles = getStyles(theme);
-
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
   const [selectedTone, setSelectedTone] = useState(TONES[0]);
 
+  const scrollViewRef = useRef<ScrollView>(null);
+  const lottieAnimationRef = useRef<LottieView>(null);
+
+  useEffect(() => {
+    if (results.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [results]);
+
+  useEffect(() => {
+    if (loading) {
+      lottieAnimationRef.current?.reset();
+      lottieAnimationRef.current?.play();
+    }
+  }, [loading]);
+
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // Haptic
-    // Alert.alert('Copied!', 'The text has been copied to your clipboard.');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
-  // Función Haptic para el tono
   const handleToneSelect = (tone: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedTone(tone);
-  }
+  };
 
   const handleGenerateRizz = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // Haptic
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (!GEMINI_API_KEY) {
       Alert.alert(
@@ -56,10 +68,12 @@ export default function PickupLinesScreen() {
     setLoading(true);
     setResults([]);
 
+    // --- PROMPT PARA PICKUP LINES ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 creative "Banger Pickup Lines".
     Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
     The user is not providing any context other than the tone, so be creative.
+    
     --- STRICT RULES (MANDATORY) ---
     1.  Your response **MUST ONLY** contain the list of 3-4 pickup lines.
     2.  Each line **MUST** be on a new line.
@@ -120,6 +134,7 @@ export default function PickupLinesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.container}
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
@@ -129,7 +144,7 @@ export default function PickupLinesScreen() {
         </Text>
 
         <View style={styles.tonalityContainer}>
-          <Text style={styles.tonalityLabel}>Select Tonality</Text>
+          <Text style={styles.tonalityLabel}>Tonality</Text>
           <View style={styles.toneButtonRow}>
             {TONES.map((tone) => (
               <Pressable
@@ -168,17 +183,19 @@ export default function PickupLinesScreen() {
         </Pressable>
 
         {loading && (
-          <ActivityIndicator
-            size="large"
-            color={themeColors.tint}
-            style={styles.loading}
-          />
+          <View style={styles.loadingContainer}>
+            <LottieView
+              ref={lottieAnimationRef}
+              source={require('../../../../assets/animations/loading-animation.json')}
+              style={styles.lottieLoading}
+              loop
+            />
+          </View>
         )}
 
         {results.length > 0 && (
           <View style={styles.resultContainer}>
-            {/* --- NUEVO: Título de resultados --- */}
-            <Text style={styles.resultsTitle}>Tap to copy:</Text>
+            <Text style={styles.resultsLabel}>Tap to copy:</Text>
             {results.map((line, index) => (
               <Pressable
                 key={index}
@@ -188,7 +205,7 @@ export default function PickupLinesScreen() {
                 <Ionicons
                   name="copy-outline"
                   size={18}
-                  color={themeColors.icon} // Color de ícono más sutil
+                  color={themeColors.tint}
                 />
               </Pressable>
             ))}
@@ -199,129 +216,131 @@ export default function PickupLinesScreen() {
   );
 }
 
-// Estilos actualizados para el tema oscuro
-const getStyles = (theme: 'light' | 'dark') =>
-  StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: themeColors.background,
-    },
-    container: {
-      flex: 1,
-      padding: 20,
-    },
-    scrollContainer: {
-      paddingBottom: 100,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: themeColors.icon,
-      marginBottom: 15,
-      textAlign: 'center',
-    },
-    tonalityContainer: {
-      marginBottom: 20,
-    },
-    tonalityLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: themeColors.text,
-      textAlign: 'center',
-      marginBottom: 10,
-    },
-    toneButtonRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      flexWrap: 'wrap',
-    },
-    toneButton: {
-      backgroundColor: themeColors.card,
-      borderColor: themeColors.border,
-      borderWidth: 1.5,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 99,
-      margin: 4,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 3,
-      elevation: 4,
-    },
-    toneButtonActive: {
-      backgroundColor: themeColors.tint,
-      borderColor: themeColors.tint,
-    },
-    toneButtonText: {
-      fontSize: 14,
-      color: themeColors.text,
-    },
-    toneButtonTextActive: {
-      color: '#FFFFFF',
-      fontWeight: 'bold',
-    },
-    buttonWrapper: {
-      width: '100%',
-      borderRadius: 99,
-      shadowColor: themeColors.tint,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 5,
-      elevation: 8,
-    },
-    buttonGradient: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 15,
-      borderRadius: 99,
-      width: '100%',
-    },
-    buttonText: {
-      color: 'white',
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginLeft: 10,
-    },
-    loading: {
-      marginTop: 30,
-    },
-    resultContainer: {
-      marginTop: 20,
-      marginBottom: 50,
-    },
-    // --- NUEVO: Título de resultados ---
-    resultsTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: themeColors.icon,
-      marginBottom: 10,
-    },
-    // --- CAMBIO: Estilo de "pillResult" mejorado ---
-    pillResult: {
-      backgroundColor: themeColors.card,
-      borderRadius: 12,
-      paddingVertical: 15,
-      paddingHorizontal: 20,
-      borderColor: themeColors.border,
-      borderLeftColor: themeColors.accentRed, // Borde de acento rojo
-      borderLeftWidth: 3, // Ancho del borde de acento
-      borderWidth: 1,
-      marginBottom: 10,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    pillResultText: {
-      fontSize: 16,
-      color: themeColors.text,
-      lineHeight: 24,
-      flex: 1,
-      marginRight: 10,
-    },
-  });
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: themeColors.background,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  scrollContainer: {
+    paddingBottom: 100,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: themeColors.icon,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  tonalityContainer: {
+    marginBottom: 20,
+  },
+  tonalityLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.text,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  toneButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+  },
+  toneButton: {
+    backgroundColor: themeColors.card,
+    borderColor: themeColors.border,
+    borderWidth: 1.5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 99,
+    margin: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  toneButtonActive: {
+    backgroundColor: themeColors.tint,
+    borderColor: themeColors.tint,
+  },
+  toneButtonText: {
+    fontSize: 14,
+    color: themeColors.text,
+  },
+  toneButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  buttonWrapper: {
+    width: '100%',
+    borderRadius: 99,
+    marginTop: 10,
+    shadowColor: themeColors.tint,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    marginBottom: 15,
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 99,
+    width: '100%',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  loadingContainer: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  lottieLoading: {
+    width: 150,
+    height: 150,
+  },
+  resultContainer: {
+    marginTop: 20,
+  },
+  resultsLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.icon,
+    marginBottom: 10,
+  },
+  pillResult: {
+    backgroundColor: themeColors.card,
+    borderRadius: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    borderLeftWidth: 3,
+    borderLeftColor: themeColors.accentRed, // Rojo
+  },
+  pillResultText: {
+    fontSize: 16,
+    color: themeColors.text,
+    lineHeight: 24,
+    flex: 1,
+    marginRight: 10,
+  },
+});
