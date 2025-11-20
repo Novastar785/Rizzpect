@@ -15,12 +15,15 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme.card,
+          // CAMBIO CLAVE: Usar el color de fondo principal (Negro) en lugar del color de tarjeta
+          // para que la barra se fusione con el resto de la pantalla.
+          backgroundColor: theme.background, 
           paddingBottom: insets.bottom,
           paddingTop: 8,
           height: 60 + insets.bottom,
-          borderTopWidth: 1,
-          borderTopColor: theme.border,
+          borderTopWidth: 0, // Eliminamos el borde superior para una fusión total
+          elevation: 0,      // Eliminamos sombra en Android
+          shadowOpacity: 0,  // Eliminamos sombra en iOS
         },
         tabBarActiveTintColor: theme.tint,
         tabBarInactiveTintColor: theme.tabIconDefault,

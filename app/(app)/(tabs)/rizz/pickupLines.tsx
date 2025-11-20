@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
+import FloatingBackButton from '@/components/FloatingBackButton';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
@@ -35,7 +36,7 @@ export default function PickupLinesScreen() {
     if (results.length > 0) {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }, 300);
     }
   }, [results]);
 
@@ -128,12 +129,15 @@ export default function PickupLinesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingBackButton />
       <ScrollView
         ref={scrollViewRef}
         style={styles.container}
         contentContainerStyle={styles.scrollContainer}
       >
+        <View style={{ height: 60 }} />
+
         <Text style={styles.subtitle}>{t('rizz.pickup.subtitle')}</Text>
 
         <View style={styles.tonalityContainer}>
@@ -213,9 +217,9 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: themeColors.background },
   container: { flex: 1, padding: 20 },
   scrollContainer: { paddingBottom: 100 },
-  subtitle: { fontSize: 16, color: themeColors.icon, marginBottom: 15, textAlign: 'center' },
+  subtitle: { fontSize: 16, color: themeColors.icon, marginBottom: 15, textAlign: 'center', fontFamily: 'Montserrat-Regular' },
   tonalityContainer: { marginBottom: 20 },
-  tonalityLabel: { fontSize: 16, fontWeight: '600', color: themeColors.text, textAlign: 'center', marginBottom: 10 },
+  tonalityLabel: { fontSize: 16, fontWeight: '600', color: themeColors.text, textAlign: 'center', marginBottom: 10, fontFamily: 'Montserrat-SemiBold' },
   toneButtonRow: { flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' },
   toneButton: {
     backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 1.5,
@@ -223,15 +227,15 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4,
   },
   toneButtonActive: { backgroundColor: themeColors.tint, borderColor: themeColors.tint },
-  toneButtonText: { fontSize: 14, color: themeColors.text },
-  toneButtonTextActive: { color: '#FFFFFF', fontWeight: 'bold' },
+  toneButtonText: { fontSize: 14, color: themeColors.text, fontFamily: 'Montserrat-Regular' },
+  toneButtonTextActive: { color: '#FFFFFF', fontWeight: 'bold', fontFamily: 'Montserrat-Bold' },
   buttonWrapper: { width: '100%', borderRadius: 99, marginTop: 10, shadowColor: themeColors.tint, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, marginBottom: 15 },
   buttonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 15, borderRadius: 99, width: '100%' },
-  buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
+  buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 10, fontFamily: 'Montserrat-Bold' },
   loadingContainer: { marginTop: 30, alignItems: 'center' },
   lottieLoading: { width: 150, height: 150 },
   resultContainer: { marginTop: 20 },
-  resultsLabel: { fontSize: 16, fontWeight: '600', color: themeColors.icon, marginBottom: 10 },
+  resultsLabel: { fontSize: 16, fontWeight: '600', color: themeColors.icon, marginBottom: 10, fontFamily: 'Montserrat-SemiBold' },
   pillResult: {
     backgroundColor: themeColors.card, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 20,
     borderColor: themeColors.border, borderWidth: 1, marginBottom: 10, flexDirection: 'row',
@@ -239,5 +243,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
     borderLeftWidth: 3, borderLeftColor: themeColors.accentRed,
   },
-  pillResultText: { fontSize: 16, color: themeColors.text, lineHeight: 24, flex: 1, marginRight: 10 },
+  pillResultText: { fontSize: 16, color: themeColors.text, lineHeight: 24, flex: 1, marginRight: 10, fontFamily: 'Montserrat-Regular' },
 });

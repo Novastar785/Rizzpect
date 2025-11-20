@@ -8,7 +8,6 @@ const accentGreen = '#34C759'; // Verde éxito
 
 export default {
   light: {
-    // El modo claro se mantiene, pero nos centraremos en el oscuro
     text: '#1A202C',
     background: '#FFFFFF',
     tint: tintColor,
@@ -22,9 +21,10 @@ export default {
     border: '#E2E8F0',
   },
   dark: {
-    // --- NUEVO TEMA OSCURO ---
+    // --- NUEVO TEMA OSCURO UNIFICADO ---
     text: '#FFFFFF', // Blanco
-    background: '#121212', // Negro tipo Spotify
+    // CAMBIO CLAVE: Negro puro para unificar con el diseño neón
+    background: '#000000', 
     tint: tintColor, // Púrpura
     secondary: secondaryColor, // Azul
     accentRed: accentRed, // Rojo
@@ -32,7 +32,9 @@ export default {
     icon: '#B3B3B3', // Gris claro para íconos inactivos
     tabIconDefault: '#B3B3B3', // Ícono de pestaña inactivo
     tabIconSelected: tintColor, // Ícono de pestaña activo (Púrpura)
-    card: '#1E1E1E', // Gris oscuro para tarjetas
+    // Mantenemos las tarjetas un poco más claras para cuando se usen (ej. Profile)
+    // pero en la pantalla Rizz las forzamos a transparente.
+    card: '#121212', 
     border: '#2A2A2A', // Borde muy sutil
   },
 };

@@ -1,42 +1,97 @@
 import { Text, View } from '@/components/Themed';
-import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, Stack } from 'expo-router';
 import React from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
+  Platform,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming,
+  interpolateColor
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient'; // Importamos LinearGradient
 
-const theme = 'dark';
-const themeColors = Colors[theme];
-
-const iconColors = {
-  start: themeColors.tint,
-  reply: themeColors.secondary,
-  awkward: themeColors.accentGreen,
-  pickup: themeColors.accentRed,
+const neonColors = {
+  purple: '#D946EF',
+  blue: '#00BFFF',
+  red: '#FF2E2E',
+  yellow: '#FFD700',
 };
 
-const RizzCard = ({ href, icon, title, description, color }: { href: string, icon: any, title: string, description: string, color: string }) => {
+// Colores para el fondo Premium
+const GRADIENT_COLORS = ['#1a0b2e', '#000000', '#000000'] as const;
+
+// Colores de tarjeta (Transparente por defecto)
+const CARD_BG_DEFAULT = 'transparent'; 
+const CARD_BG_PRESSED = '#111111'; 
+
+const RizzButton = ({ href, icon, title, color }: { href: string, icon: any, title: string, color: string }) => {
+  const scale = useSharedValue(1);
+  const progress = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const backgroundColor = interpolateColor(
+      progress.value,
+      [0, 1],
+      ['rgba(0, 0, 0, 0)', 'rgba(30, 30, 30, 0.8)'] 
+    );
+
+    return {
+      transform: [{ scale: scale.value }],
+      borderColor: color, 
+      backgroundColor: backgroundColor,
+      shadowColor: color,
+      shadowOpacity: 0.6, 
+      shadowRadius: 12,   
+      shadowOffset: { width: 0, height: 0 }, 
+      elevation: 0, 
+    };
+  });
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95, { damping: 10, stiffness: 300 });
+    progress.value = withTiming(1, { duration: 100 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 12, stiffness: 300 });
+    progress.value = withTiming(0, { duration: 200 });
+  };
+
   return (
     <Link href={href as any} asChild>
-      <Pressable style={styles.card}>
-        <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
+      <Pressable
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={styles.buttonWrapper}
+      >
+        <Animated.View style={[styles.cardInner, animatedStyle]}>
           <Ionicons
             name={icon}
-            size={24}
-            style={[styles.cardIcon, { color: color }]}
+            size={48}
+            color={color}
+            style={{
+              marginBottom: 12,
+              ...Platform.select({
+                ios: {
+                  textShadowColor: color,
+                  textShadowRadius: 15,
+                },
+              })
+            }}
           />
-        </View>
-        <View style={styles.cardTextContainer}>
-          <Text style={styles.cardTitle}>{title}</Text>
-          <Text style={styles.cardDescription}>{description}</Text>
-        </View>
-        <Ionicons name="chevron-forward-outline" size={20} color={themeColors.icon} />
+          <Text style={styles.cardTitle} numberOfLines={2} adjustsFontSizeToFit>
+            {title}
+          </Text>
+        </Animated.View>
       </Pressable>
     </Link>
   );
@@ -46,107 +101,136 @@ export default function RizzScreen() {
   const { t } = useTranslation();
   
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>{t('rizz.title')}</Text>
-        <Text style={styles.subtitle}>{t('rizz.subtitle')}</Text>
+    <View style={styles.rootContainer}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      {/* FONDO PREMIUM: Gradiente Sutil (Cubre todo el espacio absoluto) */}
+      <LinearGradient
+        colors={GRADIENT_COLORS}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0.8 }}
+        style={StyleSheet.absoluteFill}
+      />
 
-        <View style={styles.buttonContainer}>
-          <RizzCard
-            href="/(app)/(tabs)/rizz/startConversation"
-            icon="chatbubbles-outline"
-            title={t('rizz.menu.start')}
-            description={t('rizz.menu.startDesc')}
-            color={iconColors.start}
-          />
-          <RizzCard
-            href="/(app)/(tabs)/rizz/replySuggestions"
-            icon="arrow-undo-outline"
-            title={t('rizz.menu.reply')}
-            description={t('rizz.menu.replyDesc')}
-            color={iconColors.reply}
-          />
-          <RizzCard
-            href="/(app)/(tabs)/rizz/awkwardSituation"
-            icon="help-buoy-outline"
-            title={t('rizz.menu.awkward')}
-            description={t('rizz.menu.awkwardDesc')}
-            color={iconColors.awkward}
-          />
-          <RizzCard
-            href="/(app)/(tabs)/rizz/pickupLines"
-            icon="flame-outline"
-            title={t('rizz.menu.pickup')}
-            description={t('rizz.menu.pickupDesc')}
-            color={iconColors.pickup}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      {/* SafeAreaView asegura que el contenido no toque el notch o barra de estado */}
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          
+          <View style={styles.headerContainer}>
+              <Text style={styles.title}>{t('rizz.title')}</Text>
+              <Text style={styles.subtitle}>{t('rizz.subtitle')}</Text>
+          </View>
+
+          <View style={styles.gridContainer}>
+            <RizzButton
+              href="/(app)/(tabs)/rizz/startConversation"
+              icon="chatbubble-ellipses-outline"
+              title={t('rizz.menu.start')} 
+              color={neonColors.purple}
+            />
+            <RizzButton
+              href="/(app)/(tabs)/rizz/replySuggestions"
+              icon="arrow-undo-outline" 
+              title={t('rizz.menu.reply')} 
+              color={neonColors.blue}
+            />
+            <RizzButton
+              href="/(app)/(tabs)/rizz/awkwardSituation"
+              icon="alert-circle-outline"
+              title={t('rizz.menu.awkward')} 
+              color={neonColors.red}
+            />
+            <RizzButton
+              href="/(app)/(tabs)/rizz/pickupLines"
+              icon="flame-outline"
+              title={t('rizz.menu.pickup')} 
+              color={neonColors.yellow}
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#000000', 
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: themeColors.background,
+    backgroundColor: 'transparent', // Permite que el gradiente se vea
   },
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: themeColors.background,
+  scrollView: {
+    backgroundColor: 'transparent',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10, 
+    paddingBottom: 20,
+    justifyContent: 'center',
+    backgroundColor: 'transparent', // CAMBIO CLAVE ADICIONAL
+  },
+  headerContainer: {
+    marginBottom: 30,
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: themeColors.text,
+    fontFamily: 'Montserrat-Black', 
+    color: '#FFFFFF',
     marginBottom: 5,
+    textAlign: 'center',
+    textTransform: 'uppercase', 
+    letterSpacing: 1, 
+    textShadowColor: 'rgba(255, 255, 255, 0.15)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   subtitle: {
-    fontSize: 18,
-    color: themeColors.icon,
-    marginBottom: 30,
+    fontSize: 16,
+    fontFamily: 'Montserrat-Regular',
+    color: '#B3B3B3',
+    textAlign: 'center',
+    marginBottom: 10,
+    letterSpacing: 0.5,
   },
-  buttonContainer: {
-    width: '100%',
-  },
-  card: {
-    backgroundColor: themeColors.card,
+  gridContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 16, 
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, 
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  cardIcon: {
-  },
-  cardTextContainer: {
-    flex: 1,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 15,
     backgroundColor: 'transparent',
   },
-  cardTitle: {
-    color: themeColors.text,
-    fontSize: 16,
-    fontWeight: '600',
+  buttonWrapper: {
+    width: '47%',
+    aspectRatio: 1, 
+    marginBottom: 15,
   },
-  cardDescription: {
-    color: themeColors.icon,
-    fontSize: 14,
-    marginTop: 2,
+  cardInner: {
+    flex: 1,
+    backgroundColor: 'transparent', 
+    borderRadius: 24,
+    borderWidth: 2.5, 
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    shadowColor: "transparent", 
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0, 
+  },
+  cardTitle: {
+    color: '#FFFFFF',
+    fontSize: 14, 
+    fontFamily: 'Montserrat-Bold',
+    fontWeight: '700', 
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

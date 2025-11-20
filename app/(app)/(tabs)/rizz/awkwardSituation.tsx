@@ -14,12 +14,14 @@ import {
   Platform,
   Image,
   LogBox,
+  Keyboard
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
+import FloatingBackButton from '@/components/FloatingBackButton';
 
 LogBox.ignoreLogs([
   '[expo-image-picker] `ImagePicker.MediaTypeOptions` have been deprecated',
@@ -50,12 +52,15 @@ export default function AwkwardSituationScreen() {
     if (results.length > 0) {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }, 300);
     }
   }, [results]);
 
   useEffect(() => {
     if (loading) {
+      setTimeout(() => {
+         scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
       lottieAnimationRef.current?.play();
     }
   }, [loading]);
@@ -92,6 +97,7 @@ export default function AwkwardSituationScreen() {
   };
 
   const handleGenerateRizz = async () => {
+    Keyboard.dismiss();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (!GEMINI_API_KEY) {
@@ -190,18 +196,22 @@ export default function AwkwardSituationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FloatingBackButton />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
-        keyboardVerticalOffset={80}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20}
       >
         <ScrollView
           ref={scrollViewRef}
           style={styles.container}
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
+          <View style={{ height: 60 }} />
+          
           <Pressable style={styles.buttonWrapper} onPress={pickImage} disabled={loading}>
             <LinearGradient
               colors={[themeColors.tint, themeColors.secondary]}
@@ -243,7 +253,10 @@ export default function AwkwardSituationScreen() {
               value={prompt}
               onChangeText={setPrompt}
               maxLength={MAX_PROMPT_LENGTH}
-              onFocus={() => setInputFocused(true)}
+              onFocus={() => {
+                 setInputFocused(true);
+                 setTimeout(() => scrollViewRef.current?.scrollTo({ y: 200, animated: true }), 100);
+              }}
               onBlur={() => setInputFocused(false)}
             />
             <Text style={styles.charCounter}>
@@ -275,7 +288,7 @@ export default function AwkwardSituationScreen() {
           </View>
 
           <Pressable
-            style={styles.buttonWrapper}
+            style={styles.actionButtonWrapper}
             onPress={handleGenerateRizz}
             disabled={loading}>
             <LinearGradient
@@ -319,6 +332,8 @@ export default function AwkwardSituationScreen() {
               ))}
             </View>
           )}
+          
+          <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -328,30 +343,31 @@ export default function AwkwardSituationScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: themeColors.background },
   keyboardAvoidingView: { flex: 1 },
-  container: { flex: 1, padding: 20 },
-  scrollContainer: { paddingBottom: 100 },
-  orText: { fontSize: 16, color: themeColors.icon, textAlign: 'center', marginBottom: 15, fontWeight: 'bold' },
+  container: { flex: 1, paddingHorizontal: 20 },
+  scrollContainer: { paddingBottom: 40, flexGrow: 1 },
+  orText: { fontSize: 16, color: themeColors.icon, textAlign: 'center', marginBottom: 15, fontWeight: 'bold', fontFamily: 'Montserrat-Bold' },
   previewContainer: { marginBottom: 15, alignItems: 'center', position: 'relative' },
   previewImage: { width: '100%', height: 200, borderRadius: 12, borderColor: themeColors.border, borderWidth: 1, resizeMode: 'contain' },
   removeImageButton: { position: 'absolute', top: 5, right: 5, backgroundColor: 'rgba(255, 255, 255, 0.7)', borderRadius: 12 },
-  subtitle: { fontSize: 16, color: themeColors.icon, marginBottom: 15, textAlign: 'center' },
+  subtitle: { fontSize: 16, color: themeColors.icon, marginBottom: 15, textAlign: 'center', fontFamily: 'Montserrat-Regular' },
   textInputContainer: { marginBottom: 20, backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 1.5, borderRadius: 12 },
-  textInput: { padding: 15, fontSize: 16, color: themeColors.text, minHeight: 120, textAlignVertical: 'top' },
+  textInput: { padding: 15, fontSize: 16, color: themeColors.text, minHeight: 120, textAlignVertical: 'top', fontFamily: 'Montserrat-Regular' },
   charCounter: { fontSize: 12, color: themeColors.icon, textAlign: 'right', paddingHorizontal: 15, paddingBottom: 10 },
   tonalityContainer: { marginBottom: 20 },
-  tonalityLabel: { fontSize: 16, fontWeight: '600', color: themeColors.text, textAlign: 'center', marginBottom: 10 },
+  tonalityLabel: { fontSize: 16, fontWeight: '600', color: themeColors.text, textAlign: 'center', marginBottom: 10, fontFamily: 'Montserrat-SemiBold' },
   toneButtonRow: { flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' },
   toneButton: { backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 1.5, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99, margin: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4 },
   toneButtonActive: { backgroundColor: themeColors.tint, borderColor: themeColors.tint },
-  toneButtonText: { fontSize: 14, color: themeColors.text },
-  toneButtonTextActive: { color: '#FFFFFF', fontWeight: 'bold' },
+  toneButtonText: { fontSize: 14, color: themeColors.text, fontFamily: 'Montserrat-Regular' },
+  toneButtonTextActive: { color: '#FFFFFF', fontWeight: 'bold', fontFamily: 'Montserrat-Bold' },
   buttonWrapper: { width: '100%', borderRadius: 99, marginTop: 10, shadowColor: themeColors.tint, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, marginBottom: 15 },
+  actionButtonWrapper: { width: '100%', borderRadius: 99, marginTop: 10, shadowColor: themeColors.tint, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, marginBottom: 15 },
   buttonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 15, borderRadius: 99, width: '100%' },
-  buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
+  buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 10, fontFamily: 'Montserrat-Bold' },
   loadingContainer: { marginTop: 30, alignItems: 'center' },
   lottieLoading: { width: 150, height: 150 },
   resultContainer: { marginTop: 20 },
-  resultsLabel: { fontSize: 16, fontWeight: '600', color: themeColors.icon, marginBottom: 10 },
+  resultsLabel: { fontSize: 16, fontWeight: '600', color: themeColors.icon, marginBottom: 10, fontFamily: 'Montserrat-SemiBold' },
   pillResult: { backgroundColor: themeColors.card, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 20, borderColor: themeColors.border, borderWidth: 1, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1, borderLeftWidth: 3, borderLeftColor: themeColors.accentGreen },
-  pillResultText: { fontSize: 16, color: themeColors.text, lineHeight: 24, flex: 1, marginRight: 10 },
+  pillResultText: { fontSize: 16, color: themeColors.text, lineHeight: 24, flex: 1, marginRight: 10, fontFamily: 'Montserrat-Regular' },
 });
