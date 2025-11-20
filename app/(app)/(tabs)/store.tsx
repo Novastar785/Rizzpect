@@ -8,17 +8,18 @@ import Purchases, { PurchasesPackage, PurchasesOffering } from 'react-native-pur
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { supabase } from '@/lib/supabase';
 import { useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 const theme = 'dark';
 const themeColors = Colors[theme];
 
 export default function StoreScreen() {
+  const { t } = useTranslation();
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
   const [isPro, setIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentFlows, setCurrentFlows] = useState(0);
 
-  // Recargar datos cada vez que la pantalla recibe el foco
   useFocusEffect(
     useCallback(() => {
       fetchData();
@@ -28,19 +29,16 @@ export default function StoreScreen() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Obtener Ofertas de RevenueCat
       const offerings = await Purchases.getOfferings();
       if (offerings.current !== null) {
         setOfferings(offerings.current);
       }
 
-      // 2. Verificar si el usuario ya es Premium
       const customerInfo = await Purchases.getCustomerInfo();
       if (customerInfo.entitlements.active['rizzflows_premium']) {
         setIsPro(true);
       }
 
-      // 3. Obtener saldo de "Flows" desde Supabase
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data } = await supabase
@@ -61,9 +59,7 @@ export default function StoreScreen() {
     }
   };
 
-  // --- MOSTRAR PAYWALL DE REVENUECAT ---
   const presentPaywall = async () => {
-    // Esto abre la pantalla de pago nativa que diseñaste en RevenueCat
     const result = await RevenueCatUI.presentPaywall({
       displayCloseButton: true,
       offering: offerings || undefined 
@@ -73,34 +69,29 @@ export default function StoreScreen() {
       case PAYWALL_RESULT.PURCHASED:
       case PAYWALL_RESULT.RESTORED:
         setIsPro(true);
-        Alert.alert("¡Éxito!", "¡Bienvenido a Rizzflows Premium!");
+        Alert.alert("Success", "Welcome to Rizzflows Premium!");
         break;
       default:
-        // Cancelado o Error
         break;
     }
   };
 
-  // --- Lógica de Consumibles (Packs de Flows) ---
   const purchaseFlowsPack = async (pkg: PurchasesPackage) => {
     try {
-      // Compra real
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       
-      // Sumar créditos en Supabase según el ID del producto
       let creditsToAdd = 0;
       if (pkg.product.identifier === 'rizz_40') creditsToAdd = 40;
-      // Añade aquí más IDs si creaste más packs (ej. 'rizz_5', 'rizz_10')
 
       if (creditsToAdd > 0) {
         await addCreditsToSupabase(creditsToAdd);
-        Alert.alert("¡Compra Exitosa!", `Se han añadido ${creditsToAdd} Flows a tu cuenta.`);
+        Alert.alert("Success!", `Added ${creditsToAdd} Flows to your account.`);
         fetchData(); 
       }
 
     } catch (e: any) {
       if (!e.userCancelled) {
-        Alert.alert("Error en la compra", e.message);
+        Alert.alert("Error", e.message);
       }
     }
   };
@@ -122,14 +113,12 @@ export default function StoreScreen() {
       .update({ flows_balance: newBalance })
       .eq('id', user.id);
 
-    if (error) console.error("Error actualizando base de datos:", error);
+    if (error) console.error("DB Error:", error);
   };
 
-  // Renderizar tarjeta manual para consumibles (si existen en RevenueCat)
   const renderConsumables = () => {
     if (!offerings) return null;
     
-    // Buscar paquetes que empiecen con 'rizz_' (tus consumibles)
     const consumablePackages = offerings.availablePackages.filter(p => 
       p.product.identifier.startsWith('rizz_')
     );
@@ -138,7 +127,7 @@ export default function StoreScreen() {
 
     return (
       <View style={styles.consumablesContainer}>
-        <Text style={styles.sectionTitle}>Recarga Flows</Text>
+        <Text style={styles.sectionTitle}>{t('store.refill')}</Text>
         {consumablePackages.map((pkg) => (
             <Pressable 
                 key={pkg.identifier}
@@ -173,10 +162,10 @@ export default function StoreScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-            <Text style={styles.title}>Tienda</Text>
+            <Text style={styles.title}>{t('store.title')}</Text>
             <View style={styles.balanceContainer}>
                 <Ionicons name="flash" size={16} color={themeColors.text} />
-                <Text style={styles.balanceText}>{isPro ? '∞' : currentFlows} Flows</Text>
+                <Text style={styles.balanceText}>{isPro ? '∞' : currentFlows} {t('store.balance')}</Text>
             </View>
         </View>
 
@@ -184,29 +173,29 @@ export default function StoreScreen() {
           <View style={styles.proBanner}>
             <Ionicons name="checkmark-circle" size={28} color="#fff" />
             <View style={{marginLeft: 12}}>
-                <Text style={styles.proText}>¡Eres Premium!</Text>
-                <Text style={styles.proSubText}>Tienes Flows ilimitados.</Text>
+                <Text style={styles.proText}>{t('store.youArePro')}</Text>
+                <Text style={styles.proSubText}>{t('store.unlimited')}</Text>
             </View>
           </View>
         ) : (
           <Pressable onPress={presentPaywall} style={styles.premiumCard}>
              <View style={styles.premiumContent}>
                 <View style={{flex: 1}}>
-                  <Text style={styles.premiumTitle}>Rizzflows Premium</Text>
-                  <Text style={styles.premiumDesc}>Desbloquea todo el poder de tu Rizz.</Text>
+                  <Text style={styles.premiumTitle}>{t('store.proTitle')}</Text>
+                  <Text style={styles.premiumDesc}>{t('store.proDesc')}</Text>
                   <View style={styles.benefitRow}>
                      <Ionicons name="infinite" size={16} color={themeColors.tint} />
-                     <Text style={styles.benefitText}>Flows Ilimitados</Text>
+                     <Text style={styles.benefitText}>{t('store.benefit1')}</Text>
                   </View>
                   <View style={styles.benefitRow}>
                      <Ionicons name="star" size={16} color={themeColors.tint} />
-                     <Text style={styles.benefitText}>Sin anuncios</Text>
+                     <Text style={styles.benefitText}>{t('store.benefit2')}</Text>
                   </View>
                 </View>
                 <Ionicons name="diamond-outline" size={60} color={themeColors.tint} style={{opacity: 0.8}} />
              </View>
              <View style={styles.ctaButton}>
-                <Text style={styles.ctaText}>Ver Planes</Text>
+                <Text style={styles.ctaText}>{t('store.viewPlans')}</Text>
              </View>
           </Pressable>
         )}
@@ -218,12 +207,12 @@ export default function StoreScreen() {
         <Pressable style={styles.restoreButton} onPress={async () => {
             try {
               await Purchases.restorePurchases();
-              Alert.alert("Restauración", "Compras restauradas.");
+              Alert.alert("Restore", "Purchases restored.");
             } catch (e: any) {
               Alert.alert("Error", e.message);
             }
         }}>
-          <Text style={styles.restoreText}>Restaurar Compras</Text>
+          <Text style={styles.restoreText}>{t('store.restore')}</Text>
         </Pressable>
 
       </ScrollView>

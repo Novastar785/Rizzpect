@@ -1,0 +1,92 @@
+{
+  "home": {
+    "welcome": "Welcome to Rizzflows",
+    "subtitle": "Your AI-powered dating assistant.",
+    "howWorks": "How it works:",
+    "step1": "Upload any screenshot (Tinder, Bumble, etc.)",
+    "step2": "Get 3-4 clever replies instantly",
+    "step3": "Tap to copy and paste",
+    "getStarted": "Get Started"
+  },
+  "store": {
+    "title": "Store",
+    "balance": "Flows",
+    "proTitle": "Rizzflows Premium",
+    "proDesc": "Unlock the full power of your Rizz.",
+    "benefit1": "Unlimited Flows",
+    "benefit2": "No Ads",
+    "viewPlans": "View Plans",
+    "youArePro": "You are Premium!",
+    "unlimited": "You have unlimited Flows.",
+    "refill": "Refill Flows",
+    "restore": "Restore Purchases"
+  },
+  "profile": {
+    "member": "Premium Member",
+    "activeSub": "Active Subscription",
+    "subscription": "Subscription",
+    "manage": "Manage Subscription",
+    "upgrade": "Change Plan / Upgrade",
+    "legal": "Legal",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
+  },
+  "rizz": {
+    "title": "Social Assistant",
+    "subtitle": "What can I help you with today?",
+    "menu": {
+      "start": "Start a Conversation",
+      "startDesc": "Break the ice with a perfect opener.",
+      "reply": "Get Reply Suggestions",
+      "replyDesc": "Analyze a screenshot and get clever replies.",
+      "awkward": "Awkward Situation",
+      "awkwardDesc": "Navigate tricky social moments smoothly.",
+      "pickup": "Banger Pickup Lines",
+      "pickupDesc": "Generate lines that actually work."
+    },
+    "common": {
+      "tonality": "Tonality",
+      "upload": "Upload Screenshot",
+      "or": "OR",
+      "generating": "Generating...",
+      "copy": "Tap to copy:",
+      "permission": "Permission Denied",
+      "permissionMsg": "We need access to your photos to analyze a screenshot.",
+      "apiMissing": "API Key Missing",
+      "inputRequired": "Input Required"
+    },
+    "start": {
+      "title": "Start a Conversation",
+      "placeholder": "e.g., 'She likes hiking and pizza...'",
+      "button": "Get Openers",
+      "prompt": "Analyze this screenshot and give me conversation starters."
+    },
+    "reply": {
+      "title": "Get Reply Suggestions",
+      "placeholder": "e.g., 'She said she loves pineapple on pizza...'",
+      "button": "Get Reply",
+      "prompt": "Analyze the last message and suggest replies."
+    },
+    "awkward": {
+      "title": "Awkward Situations",
+      "placeholder": "e.g., 'I accidentally liked her old photo...'",
+      "button": "Get Advice",
+      "prompt": "Analyze this situation/screenshot and give advice."
+    },
+    "pickup": {
+      "title": "Banger Pickup Lines",
+      "subtitle": "Select a tone and get 3-4 banger lines.",
+      "button": "Generate Lines"
+    },
+    "tones": {
+      "Casual": "Casual",
+      "Flirty": "Flirty",
+      "Playful": "Playful",
+      "Non-chalant": "Non-chalant",
+      "Spicy": "Spicy"
+    }
+  },
+  "prompts": {
+    "langInstruction": "You MUST answer in ENGLISH."
+  }
+}

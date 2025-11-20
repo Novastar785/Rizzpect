@@ -1,0 +1,92 @@
+{
+  "home": {
+    "welcome": "Bem-vindo ao Rizzflows",
+    "subtitle": "Seu assistente de namoro com IA.",
+    "howWorks": "Como funciona:",
+    "step1": "Envie qualquer captura de tela (Tinder, etc.)",
+    "step2": "Receba 3-4 respostas inteligentes",
+    "step3": "Toque para copiar e colar",
+    "getStarted": "Começar"
+  },
+  "store": {
+    "title": "Loja",
+    "balance": "Flows",
+    "proTitle": "Rizzflows Premium",
+    "proDesc": "Desbloqueie todo o poder do seu Rizz.",
+    "benefit1": "Flows Ilimitados",
+    "benefit2": "Sem Anúncios",
+    "viewPlans": "Ver Planos",
+    "youArePro": "Você é Premium!",
+    "unlimited": "Você tem Flows ilimitados.",
+    "refill": "Recarregar Flows",
+    "restore": "Restaurar Compras"
+  },
+  "profile": {
+    "member": "Membro Premium",
+    "activeSub": "Assinatura Ativa",
+    "subscription": "Assinatura",
+    "manage": "Gerenciar Assinatura",
+    "upgrade": "Mudar Plano / Upgrade",
+    "legal": "Legal",
+    "terms": "Termos de Serviço",
+    "privacy": "Política de Privacidade"
+  },
+  "rizz": {
+    "title": "Assistente Social",
+    "subtitle": "Como posso ajudar você hoje?",
+    "menu": {
+      "start": "Iniciar Conversa",
+      "startDesc": "Quebre o gelo com a abertura perfeita.",
+      "reply": "Sugestões de Resposta",
+      "replyDesc": "Analise capturas e obtenha respostas inteligentes.",
+      "awkward": "Situação Estranha",
+      "awkwardDesc": "Lide com momentos sociais difíceis.",
+      "pickup": "Cantadas Infalíveis",
+      "pickupDesc": "Gere linhas que realmente funcionam."
+    },
+    "common": {
+      "tonality": "Tonalidade",
+      "upload": "Enviar Captura",
+      "or": "OU",
+      "generating": "Gerando...",
+      "copy": "Toque para copiar:",
+      "permission": "Permissão Negada",
+      "permissionMsg": "Precisamos de acesso às suas fotos para analisar a captura.",
+      "apiMissing": "Chave API Ausente",
+      "inputRequired": "Entrada Necessária"
+    },
+    "start": {
+      "title": "Iniciar Conversa",
+      "placeholder": "ex: 'Ela gosta de trilhas e pizza...'",
+      "button": "Obter Aberturas",
+      "prompt": "Analise esta captura e me dê iniciadores de conversa."
+    },
+    "reply": {
+      "title": "Sugestões de Resposta",
+      "placeholder": "ex: 'Ela disse que gosta de pizza com abacaxi...'",
+      "button": "Obter Resposta",
+      "prompt": "Analise a última mensagem e sugira respostas."
+    },
+    "awkward": {
+      "title": "Situações Estranhas",
+      "placeholder": "ex: 'Curti uma foto dela de 2018 sem querer...'",
+      "button": "Obter Conselho",
+      "prompt": "Analise esta situação/captura e me dê conselhos."
+    },
+    "pickup": {
+      "title": "Cantadas Infalíveis",
+      "subtitle": "Escolha um tom e receba 3-4 linhas tops.",
+      "button": "Gerar Linhas"
+    },
+    "tones": {
+      "Casual": "Casual",
+      "Flirty": "Paquerador",
+      "Playful": "Brincalhão",
+      "Non-chalant": "Despreocupado",
+      "Spicy": "Picante"
+    }
+  },
+  "prompts": {
+    "langInstruction": "Responda APENAS em PORTUGUÊS (do Brasil)."
+  }
+}

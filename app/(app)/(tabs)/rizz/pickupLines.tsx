@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
+import { useTranslation } from 'react-i18next';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
@@ -22,6 +23,7 @@ const theme = 'dark';
 const themeColors = Colors[theme];
 
 export default function PickupLinesScreen() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
   const [selectedTone, setSelectedTone] = useState(TONES[0]);
@@ -59,8 +61,8 @@ export default function PickupLinesScreen() {
 
     if (!GEMINI_API_KEY) {
       Alert.alert(
-        'API Key Missing',
-        'Please add your EXPO_PUBLIC_GEMINI_API_KEY to the .env file and restart the app with `expo start -c`.'
+        t('rizz.common.apiMissing'),
+        'Please add your EXPO_PUBLIC_GEMINI_API_KEY to the .env file.'
       );
       return;
     }
@@ -68,11 +70,15 @@ export default function PickupLinesScreen() {
     setLoading(true);
     setResults([]);
 
-    // --- PROMPT PARA PICKUP LINES ---
+    const langInstruction = t('prompts.langInstruction');
+
+    // --- PROMPT MEJORADO CON REGLAS DE SEGURIDAD ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 creative "Banger Pickup Lines".
     Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
     The user is not providing any context other than the tone, so be creative.
+    
+    ${langInstruction}
     
     --- STRICT RULES (MANDATORY) ---
     1.  Your response **MUST ONLY** contain the list of 3-4 pickup lines.
@@ -105,12 +111,7 @@ export default function PickupLinesScreen() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(
-          `API Error ${response.status}: ${errorBody || response.statusText}`
-        );
-      }
+      if (!response.ok) throw new Error(`API Error`);
 
       const data = await response.json();
 
@@ -121,11 +122,9 @@ export default function PickupLinesScreen() {
           .map((line: string) => line.replace(/^(?:\d+\.|\*|\-)\s*/, '').trim())
           .filter((line: string) => line.length > 0);
         setResults(parsedLines);
-      } else {
-        throw new Error('No valid response from API.');
       }
     } catch (error: any) {
-      Alert.alert('Generation Failed', error.message);
+      Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
     }
@@ -137,14 +136,11 @@ export default function PickupLinesScreen() {
         ref={scrollViewRef}
         style={styles.container}
         contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.subtitle}>
-          Select a tone and get 3-4 banger pickup lines.
-        </Text>
+        <Text style={styles.subtitle}>{t('rizz.pickup.subtitle')}</Text>
 
         <View style={styles.tonalityContainer}>
-          <Text style={styles.tonalityLabel}>Tonality</Text>
+          <Text style={styles.tonalityLabel}>{t('rizz.common.tonality')}</Text>
           <View style={styles.toneButtonRow}>
             {TONES.map((tone) => (
               <Pressable
@@ -159,7 +155,7 @@ export default function PickupLinesScreen() {
                     styles.toneButtonText,
                     selectedTone === tone && styles.toneButtonTextActive,
                   ]}>
-                  {tone}
+                  {t(`rizz.tones.${tone}`)}
                 </Text>
               </Pressable>
             ))}
@@ -177,7 +173,7 @@ export default function PickupLinesScreen() {
             style={styles.buttonGradient}>
             <Ionicons name="sparkles-outline" size={20} color="white" />
             <Text style={styles.buttonText}>
-              {loading ? 'Generating...' : 'Generate Lines'}
+              {loading ? t('rizz.common.generating') : t('rizz.pickup.button')}
             </Text>
           </LinearGradient>
         </Pressable>
@@ -195,7 +191,7 @@ export default function PickupLinesScreen() {
 
         {results.length > 0 && (
           <View style={styles.resultContainer}>
-            <Text style={styles.resultsLabel}>Tap to copy:</Text>
+            <Text style={styles.resultsLabel}>{t('rizz.common.copy')}</Text>
             {results.map((line, index) => (
               <Pressable
                 key={index}
@@ -217,130 +213,34 @@ export default function PickupLinesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  scrollContainer: {
-    paddingBottom: 100,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: themeColors.icon,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  tonalityContainer: {
-    marginBottom: 20,
-  },
-  tonalityLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.text,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  toneButtonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
-  },
+  safeArea: { flex: 1, backgroundColor: themeColors.background },
+  container: { flex: 1, padding: 20 },
+  scrollContainer: { paddingBottom: 100 },
+  subtitle: { fontSize: 16, color: themeColors.icon, marginBottom: 15, textAlign: 'center' },
+  tonalityContainer: { marginBottom: 20 },
+  tonalityLabel: { fontSize: 16, fontWeight: '600', color: themeColors.text, textAlign: 'center', marginBottom: 10 },
+  toneButtonRow: { flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' },
   toneButton: {
-    backgroundColor: themeColors.card,
-    borderColor: themeColors.border,
-    borderWidth: 1.5,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 99,
-    margin: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
+    backgroundColor: themeColors.card, borderColor: themeColors.border, borderWidth: 1.5,
+    paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99, margin: 4,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4,
   },
-  toneButtonActive: {
-    backgroundColor: themeColors.tint,
-    borderColor: themeColors.tint,
-  },
-  toneButtonText: {
-    fontSize: 14,
-    color: themeColors.text,
-  },
-  toneButtonTextActive: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  buttonWrapper: {
-    width: '100%',
-    borderRadius: 99,
-    marginTop: 10,
-    shadowColor: themeColors.tint,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-    marginBottom: 15,
-  },
-  buttonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
-    borderRadius: 99,
-    width: '100%',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  loadingContainer: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
-  lottieLoading: {
-    width: 150,
-    height: 150,
-  },
-  resultContainer: {
-    marginTop: 20,
-  },
-  resultsLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.icon,
-    marginBottom: 10,
-  },
+  toneButtonActive: { backgroundColor: themeColors.tint, borderColor: themeColors.tint },
+  toneButtonText: { fontSize: 14, color: themeColors.text },
+  toneButtonTextActive: { color: '#FFFFFF', fontWeight: 'bold' },
+  buttonWrapper: { width: '100%', borderRadius: 99, marginTop: 10, shadowColor: themeColors.tint, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, marginBottom: 15 },
+  buttonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 15, borderRadius: 99, width: '100%' },
+  buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
+  loadingContainer: { marginTop: 30, alignItems: 'center' },
+  lottieLoading: { width: 150, height: 150 },
+  resultContainer: { marginTop: 20 },
+  resultsLabel: { fontSize: 16, fontWeight: '600', color: themeColors.icon, marginBottom: 10 },
   pillResult: {
-    backgroundColor: themeColors.card,
-    borderRadius: 12,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-    borderLeftWidth: 3,
-    borderLeftColor: themeColors.accentRed, // Rojo
+    backgroundColor: themeColors.card, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 20,
+    borderColor: themeColors.border, borderWidth: 1, marginBottom: 10, flexDirection: 'row',
+    justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
+    borderLeftWidth: 3, borderLeftColor: themeColors.accentRed,
   },
-  pillResultText: {
-    fontSize: 16,
-    color: themeColors.text,
-    lineHeight: 24,
-    flex: 1,
-    marginRight: 10,
-  },
+  pillResultText: { fontSize: 16, color: themeColors.text, lineHeight: 24, flex: 1, marginRight: 10 },
 });

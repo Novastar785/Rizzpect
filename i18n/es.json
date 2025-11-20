@@ -1,0 +1,92 @@
+{
+  "home": {
+    "welcome": "Bienvenido a Rizzflows",
+    "subtitle": "Tu asistente de citas con IA.",
+    "howWorks": "Cómo funciona:",
+    "step1": "Sube cualquier captura (Tinder, Bumble, etc.)",
+    "step2": "Obtén 3-4 respuestas inteligentes al instante",
+    "step3": "Toca para copiar y pegar",
+    "getStarted": "Comenzar"
+  },
+  "store": {
+    "title": "Tienda",
+    "balance": "Flows",
+    "proTitle": "Rizzflows Premium",
+    "proDesc": "Desbloquea todo el poder de tu Rizz.",
+    "benefit1": "Flows Ilimitados",
+    "benefit2": "Sin Anuncios",
+    "viewPlans": "Ver Planes",
+    "youArePro": "¡Eres Premium!",
+    "unlimited": "Tienes Flows ilimitados.",
+    "refill": "Recargar Flows",
+    "restore": "Restaurar Compras"
+  },
+  "profile": {
+    "member": "Miembro Premium",
+    "activeSub": "Suscripción Activa",
+    "subscription": "Suscripción",
+    "manage": "Gestionar Suscripción",
+    "upgrade": "Cambiar Plan / Mejorar",
+    "legal": "Legal",
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad"
+  },
+  "rizz": {
+    "title": "Asistente Social",
+    "subtitle": "¿En qué puedo ayudarte hoy?",
+    "menu": {
+      "start": "Iniciar Conversación",
+      "startDesc": "Rompe el hielo con el abridor perfecto.",
+      "reply": "Sugerencias de Respuesta",
+      "replyDesc": "Analiza capturas y obtén respuestas inteligentes.",
+      "awkward": "Situación Incómoda",
+      "awkwardDesc": "Maneja momentos sociales difíciles.",
+      "pickup": "Piropos Impactantes",
+      "pickupDesc": "Genera frases que realmente funcionan."
+    },
+    "common": {
+      "tonality": "Tonalidad",
+      "upload": "Subir Captura",
+      "or": "O",
+      "generating": "Generando...",
+      "copy": "Toca para copiar:",
+      "permission": "Permiso Denegado",
+      "permissionMsg": "Necesitamos acceso a tus fotos para analizar la captura.",
+      "apiMissing": "Falta API Key",
+      "inputRequired": "Entrada Requerida"
+    },
+    "start": {
+      "title": "Iniciar Conversación",
+      "placeholder": "ej., 'Le gusta el senderismo y la pizza...'",
+      "button": "Obtener Abridores",
+      "prompt": "Analiza esta captura y dame temas de conversación."
+    },
+    "reply": {
+      "title": "Sugerencias de Respuesta",
+      "placeholder": "ej., 'Dijo que le gusta la pizza con piña...'",
+      "button": "Obtener Respuesta",
+      "prompt": "Analiza el último mensaje y sugiere respuestas."
+    },
+    "awkward": {
+      "title": "Situaciones Incómodas",
+      "placeholder": "ej., 'Le di like a su foto de 2018 por error...'",
+      "button": "Obtener Consejo",
+      "prompt": "Analiza esta situación/captura y dame consejos."
+    },
+    "pickup": {
+      "title": "Piropos Impactantes",
+      "subtitle": "Elige un tono y obtén 3-4 líneas ganadoras.",
+      "button": "Generar Líneas"
+    },
+    "tones": {
+      "Casual": "Casual",
+      "Flirty": "Coqueto",
+      "Playful": "Juguetón",
+      "Non-chalant": "Despreocupado",
+      "Spicy": "Picante"
+    }
+  },
+  "prompts": {
+    "langInstruction": "Responde ÚNICAMENTE en ESPAÑOL (neutro o latino)."
+  }
+}

@@ -9,20 +9,18 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
-// Forzamos el tema oscuro
 const theme = 'dark';
 const themeColors = Colors[theme];
 
-// --- NUEVO: Colores de íconos para dar vida a la lista ---
 const iconColors = {
-  start: themeColors.tint, // Púrpura
-  reply: themeColors.secondary, // Azul
-  awkward: themeColors.accentGreen, // Verde
-  pickup: themeColors.accentRed, // Rojo
+  start: themeColors.tint,
+  reply: themeColors.secondary,
+  awkward: themeColors.accentGreen,
+  pickup: themeColors.accentRed,
 };
 
-// --- NUEVO: Componente de tarjeta de Rizz ---
 const RizzCard = ({ href, icon, title, description, color }: { href: string, icon: any, title: string, description: string, color: string }) => {
   return (
     <Link href={href as any} asChild>
@@ -45,39 +43,41 @@ const RizzCard = ({ href, icon, title, description, color }: { href: string, ico
 };
 
 export default function RizzScreen() {
+  const { t } = useTranslation();
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
-        <Text style={styles.title}>Social Assistant</Text>
-        <Text style={styles.subtitle}>What can I help you with today?</Text>
+        <Text style={styles.title}>{t('rizz.title')}</Text>
+        <Text style={styles.subtitle}>{t('rizz.subtitle')}</Text>
 
         <View style={styles.buttonContainer}>
           <RizzCard
             href="/(app)/(tabs)/rizz/startConversation"
             icon="chatbubbles-outline"
-            title="Start a Conversation"
-            description="Break the ice with a perfect opener."
+            title={t('rizz.menu.start')}
+            description={t('rizz.menu.startDesc')}
             color={iconColors.start}
           />
           <RizzCard
             href="/(app)/(tabs)/rizz/replySuggestions"
             icon="arrow-undo-outline"
-            title="Get Reply Suggestions"
-            description="Analyze a screenshot and get clever replies."
+            title={t('rizz.menu.reply')}
+            description={t('rizz.menu.replyDesc')}
             color={iconColors.reply}
           />
           <RizzCard
             href="/(app)/(tabs)/rizz/awkwardSituation"
             icon="help-buoy-outline"
-            title="Awkward Situation"
-            description="Navigate tricky social moments smoothly."
+            title={t('rizz.menu.awkward')}
+            description={t('rizz.menu.awkwardDesc')}
             color={iconColors.awkward}
           />
           <RizzCard
             href="/(app)/(tabs)/rizz/pickupLines"
             icon="flame-outline"
-            title="Banger Pickup Lines"
-            description="Generate lines that actually work."
+            title={t('rizz.menu.pickup')}
+            description={t('rizz.menu.pickupDesc')}
             color={iconColors.pickup}
           />
         </View>
@@ -86,7 +86,6 @@ export default function RizzScreen() {
   );
 }
 
-// Estilos actualizados para el tema oscuro
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -111,7 +110,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
   },
-  // --- NUEVOS Estilos de Tarjeta ---
   card: {
     backgroundColor: themeColors.card,
     flexDirection: 'row',
@@ -136,7 +134,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   cardIcon: {
-    // El color se aplica dinámicamente
   },
   cardTextContainer: {
     flex: 1,
@@ -152,5 +149,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
-  // --- FIN Estilos de Tarjeta ---
 });

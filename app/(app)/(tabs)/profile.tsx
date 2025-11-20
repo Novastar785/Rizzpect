@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import RevenueCatUI from 'react-native-purchases-ui';
+import { useTranslation } from 'react-i18next';
 
 const theme = 'dark';
 const themeColors = Colors[theme];
@@ -20,8 +21,8 @@ const SettingsRow = ({ icon, label, onPress, color = themeColors.tint }: { icon:
 );
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   
-  // 1. Manage Subscription (Cancel, Billing history)
   const openCustomerCenter = async () => {
     try {
       await RevenueCatUI.presentCustomerCenter();
@@ -30,11 +31,8 @@ export default function ProfileScreen() {
     }
   };
 
-  // 2. Upgrade Plan (Switch from Weekly to Annual, etc.)
   const openUpgradePaywall = async () => {
     try {
-        // Presenting the paywall to a subscribed user allows them to switch plans.
-        // displayCloseButton: true allows them to cancel the upgrade attempt.
         await RevenueCatUI.presentPaywall({
             displayCloseButton: true 
         });
@@ -50,40 +48,39 @@ export default function ProfileScreen() {
             <View style={styles.avatar}>
                <Ionicons name="person" size={40} color={themeColors.tint} />
             </View>
-            <Text style={styles.username}>Premium Member</Text>
+            <Text style={styles.username}>{t('profile.member')}</Text>
             <View style={[styles.badge, { backgroundColor: themeColors.accentGreen }]}>
                 <Ionicons name="infinite" size={14} color="#fff" />
-                <Text style={[styles.badgeText, { color: "#fff" }]}>Active Subscription</Text>
+                <Text style={[styles.badgeText, { color: "#fff" }]}>{t('profile.activeSub')}</Text>
             </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Subscription</Text>
+        <Text style={styles.sectionTitle}>{t('profile.subscription')}</Text>
         <View style={styles.settingsContainer}>
             <SettingsRow 
                 icon="card-outline" 
-                label="Manage Subscription" 
+                label={t('profile.manage')} 
                 onPress={openCustomerCenter} 
             />
-             {/* LOGIC FOR UPGRADE: Showing the paywall again allows users to select a different product */}
             <SettingsRow 
                 icon="rocket-outline" 
-                label="Change Plan / Upgrade" 
+                label={t('profile.upgrade')} 
                 color={themeColors.secondary}
                 onPress={openUpgradePaywall} 
             />
         </View>
 
-        <Text style={styles.sectionTitle}>Legal</Text>
+        <Text style={styles.sectionTitle}>{t('profile.legal')}</Text>
         <View style={styles.settingsContainer}>
             <SettingsRow 
                 icon="document-text-outline" 
-                label="Terms of Service" 
+                label={t('profile.terms')} 
                 color={themeColors.icon}
                 onPress={() => {}} 
             />
             <SettingsRow 
                 icon="shield-checkmark-outline" 
-                label="Privacy Policy" 
+                label={t('profile.privacy')} 
                 color={themeColors.icon}
                 onPress={() => {}} 
             />
