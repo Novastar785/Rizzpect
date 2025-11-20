@@ -1,401 +1,412 @@
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, useColorScheme, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '@/lib/supabase'; // Para el fulfillment
-import { LinearGradient } from 'expo-linear-gradient'; // Importar gradiente
+import Purchases, { PurchasesPackage, PurchasesOffering } from 'react-native-purchases';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
+import { supabase } from '@/lib/supabase';
+import { useFocusEffect } from 'expo-router';
 
-// NOTA IMPORTANTE: Para que este código funcione, debes instalar:
-// npx expo install expo-in-app-purchases
-// Y también:
-// npx expo install expo-linear-gradient
-
-// --- Tipos definidos ---
-type ThemeKey = 'light' | 'dark';
-const theme = 'dark'; // Forzar tema oscuro
+const theme = 'dark';
 const themeColors = Colors[theme];
 
-// El tipo de Producto REAL de Expo
-type ExpoProduct = {
-    productId: string;
-    title: string;
-    price: string; // Ejemplo: "$0.99"
-    description: string;
-    // Otros campos como isSubscription, localizedPrice, etc.
-};
+export default function StoreScreen() {
+  const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
+  const [isPro, setIsPro] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [currentFlows, setCurrentFlows] = useState(0);
 
-// Nuestra definición de Producto para renderizar
-type ProductDefinition = {
-    id: string;
-    flow?: number;
-    name?: string;
-    tag?: string;
-    benefit?: string;
-    icon?: any;
-    isSubscription: boolean;
-    // Campo para guardar los datos reales del store
-    storeDetails: ExpoProduct | null; 
-};
-// -----------------------
-
-// --- Product IDs que debes registrar en App Store Connect y Google Play Console ---
-const PRODUCT_IDS = [
-    'rizz_5',        // Consumible
-    'rizz_35',       // Consumible
-    'rizz_70',       // Consumible
-    'pro_weekly',    // Suscripción
-    'monster_monthly', // Suscripción
-    'premium_yearly',  // Suscripción
-];
-
-// --- Definiciones Lógicas ---
-const DEFINITIONS: ProductDefinition[] = [
-    // Packs de Créditos
-    { id: 'rizz_5', flow: 5, tag: 'Starter', icon: 'leaf-outline', isSubscription: false, storeDetails: null },
-    { id: 'rizz_35', flow: 35, tag: 'Best Value', icon: 'star-outline', isSubscription: false, storeDetails: null },
-    { id: 'rizz_70', flow: 70, tag: 'Bulk Buy', icon: 'rocket-outline', isSubscription: false, storeDetails: null },
-    // Suscripciones
-    { id: 'pro_weekly', name: 'Weekly Pro Access', benefit: 'Unlimited Interactions', icon: 'flash-outline', isSubscription: true, storeDetails: null },
-    { id: 'monster_monthly', name: 'Monthly Monster Access', benefit: 'Unlimited Interactions + Priority', icon: 'flame-outline', isSubscription: true, storeDetails: null },
-    { id: 'premium_yearly', name: 'Yearly Premium Access', benefit: 'VIP Full Access', icon: 'sparkles-outline', isSubscription: true, storeDetails: null },
-];
-// -----------------------------
-
-/**
- * Función (placeholder) para el Fulfillment:
- * ESTO DEBE HACERSE EN TU BACKEND (SUPABASE EDGE FUNCTION) POR SEGURIDAD.
- */
-const fulfillPurchase = async (purchase: any, isSubscription: boolean) => {
-    // 1. Obtener el recibo (receipt) de la compra de Expo
-    const receipt = JSON.stringify(purchase);
-    
-    try {
-        // 2. ENVIAR EL RECIBO A UN ENDPOINT SEGURO (Supabase Edge Function)
-        // Este endpoint es el único que debe hablar con las APIs de Apple/Google
-        // para verificar que el pago es 100% legítimo.
-        const { data, error } = await supabase.functions.invoke('verify-iap', {
-            body: {
-                receipt,
-                platform: 'ios' // o 'android', dependiendo de la plataforma
-            }
-        });
-
-        if (error) throw new Error(error.message);
-
-        // 3. Si la verificación es exitosa, el backend actualiza los créditos del usuario en la BD.
-        Alert.alert("Success", `Purchase verified and ${isSubscription ? 'access granted' : 'credits added'}!`);
-
-    } catch (error: any) {
-        console.error("Fulfillment Error:", error);
-        Alert.alert("Error", "Could not verify purchase. Contact support.");
-    }
-};
-
-
-// --- Lógica REAL de Compra IAP ---
-const handlePurchase = async (product: ProductDefinition) => {
-    if (!product.storeDetails) {
-        return Alert.alert("Error", "Product details not loaded yet.");
-    }
-    
-    // Inicia el proceso de compra de la tienda
-    try {
-        // ** INTEGRACIÓN REAL DE EXPO IAP **
-        // const purchase = await InAppPurchases.purchaseItemAsync(product.id);
-        
-        // ** SIMULACIÓN DE ÉXITO para la estructura **
-        const purchase = { productId: product.id, receipt: "FAKE_RECEIPT_DATA..." }; 
-        
-        if (purchase) {
-            // Llama a la función de cumplimiento con el objeto de compra
-            await fulfillPurchase(purchase, product.isSubscription);
-        }
-
-    } catch (error) {
-        console.error("Purchase Error:", error);
-        Alert.alert("Purchase Failed", "Could not complete the transaction.");
-    }
-};
-// ---------------------------------
-
-
-const ProductCard = ({ product }: { product: ProductDefinition }) => {
-  const styles = getStyles(theme);
-  const tintColor = themeColors.tint;
-  
-  const title = product.isSubscription ? product.name : `${product.flow} Rizzflow Credits`;
-  const subtitle = product.isSubscription ? product.benefit : `Pay-as-you-go interactions`;
-  const isBestValue = product.tag === 'Best Value';
-  const priceDisplay = product.storeDetails ? product.storeDetails.price : '...';
-
-  const cardContent = (
-    <Pressable 
-        style={[
-            styles.card,
-            { 
-              borderColor: isBestValue ? tintColor : themeColors.border,
-              opacity: product.storeDetails ? 1 : 0.6
-            }
-        ]}
-        onPress={() => product.storeDetails && handlePurchase(product)}
-        disabled={!product.storeDetails}
-    >
-      <View style={styles.cardHeader}>
-        {product.icon && <Ionicons name={product.icon} size={24} color={tintColor} />}
-        <Text style={styles.cardTitle}>{title}</Text>
-      </View>
-      
-      <Text style={styles.cardSubtitle}>
-        {subtitle}
-      </Text>
-
-      <Text style={[styles.priceText, { color: isBestValue ? tintColor : themeColors.text }]}>
-        {priceDisplay}
-      </Text>
-      
-      {product.tag && (
-        <View style={[styles.tag, { backgroundColor: isBestValue ? tintColor : themeColors.secondary }]}>
-          <Text style={styles.tagText}>{product.tag}</Text>
-        </View>
-      )}
-    </Pressable>
+  // Recargar datos cada vez que la pantalla recibe el foco (el usuario entra)
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
   );
 
-  // --- NUEVO: Añadir gradiente al "Best Value" ---
-  if (isBestValue) {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // 1. Obtener Ofertas de RevenueCat (Suscripciones y Productos)
+      const offerings = await Purchases.getOfferings();
+      if (offerings.current !== null) {
+        setOfferings(offerings.current);
+      }
+
+      // 2. Verificar si el usuario ya es Premium
+      const customerInfo = await Purchases.getCustomerInfo();
+      if (customerInfo.entitlements.active['rizzflows_premium']) {
+        setIsPro(true);
+      }
+
+      // 3. Obtener saldo de "Flows" desde Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('flows_balance')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) {
+          setCurrentFlows(data.flows_balance || 0);
+        }
+      }
+
+    } catch (e) {
+      console.error("Error cargando datos de la tienda", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Mostrar Paywall para Suscripciones ---
+  const presentPaywall = async () => {
+    // RevenueCatUI muestra un Paywall nativo pre-diseñado
+    const result = await RevenueCatUI.presentPaywall({
+      displayCloseButton: true,
+      offering: offerings || undefined 
+    });
+
+    switch (result) {
+      case PAYWALL_RESULT.PURCHASED:
+      case PAYWALL_RESULT.RESTORED:
+        setIsPro(true);
+        Alert.alert("¡Éxito!", "¡Bienvenido a Rizzflows Premium!");
+        break;
+      default:
+        // Cancelado o Error
+        break;
+    }
+  };
+
+  // --- Comprar Pack de Créditos (Consumible) ---
+  const purchaseFlowsPack = async (pkg: PurchasesPackage) => {
+    try {
+      // 1. Ejecutar compra en la tienda (Google Play / App Store)
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
+      
+      // 2. Si la compra fue exitosa, sumar créditos en Supabase
+      let creditsToAdd = 0;
+      if (pkg.product.identifier === 'rizz_40') creditsToAdd = 40;
+
+      if (creditsToAdd > 0) {
+        await addCreditsToSupabase(creditsToAdd);
+        Alert.alert("¡Compra Exitosa!", `Se han añadido ${creditsToAdd} Flows a tu cuenta.`);
+        fetchData(); // Actualizar saldo visualmente
+      }
+
+    } catch (e: any) {
+      if (!e.userCancelled) {
+        Alert.alert("Error en la compra", e.message);
+      }
+    }
+  };
+
+  const addCreditsToSupabase = async (amount: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Obtener saldo actual
+    const { data: current } = await supabase
+      .from('profiles')
+      .select('flows_balance')
+      .eq('id', user.id)
+      .single();
+    
+    const newBalance = (current?.flows_balance || 0) + amount;
+
+    // Actualizar saldo
+    const { error } = await supabase
+      .from('profiles')
+      .update({ flows_balance: newBalance })
+      .eq('id', user.id);
+
+    if (error) console.error("Error actualizando base de datos:", error);
+  };
+
+  // Renderizar tarjeta manual para el consumible (40 Flows)
+  const renderConsumables = () => {
+    if (!offerings) return null;
+    
+    // Buscar el paquete 'rizz_40' dentro de las ofertas disponibles
+    const flowPackage = offerings.availablePackages.find(p => 
+      p.product.identifier === 'rizz_40'
+    );
+
+    if (!flowPackage) return (
+       <Text style={{color: 'gray', textAlign: 'center', marginVertical: 10, padding: 20}}>
+         (Producto 'rizz_40' no encontrado en RevenueCat. Asegúrate de configurarlo en el Offering 'Default'.)
+       </Text>
+    );
+
     return (
-      <LinearGradient
-        colors={[`${tintColor}40`, `${tintColor}00`]} // Gradiente púrpura sutil
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.cardContainer}
-      >
-        {cardContent}
-      </LinearGradient>
+      <View style={styles.consumablesContainer}>
+        <Text style={styles.sectionTitle}>Recarga Flows</Text>
+        
+        <Pressable 
+            style={styles.consumableCard}
+            onPress={() => purchaseFlowsPack(flowPackage)}
+        >
+            <View style={styles.iconBg}>
+                <Ionicons name="flash" size={24} color={themeColors.secondary} />
+            </View>
+            <View style={{flex: 1, paddingHorizontal: 12}}>
+                <Text style={styles.consumableTitle}>40 Flows</Text>
+                <Text style={styles.consumableDesc}>Paga solo lo que usas</Text>
+            </View>
+            <View style={styles.priceButton}>
+                <Text style={styles.priceText}>{flowPackage.product.priceString}</Text>
+            </View>
+        </Pressable>
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={themeColors.tint} />
+      </View>
     );
   }
 
   return (
-    <View style={styles.cardContainer}>
-      {cardContent}
-    </View>
-  );
-};
-
-
-export default function StoreScreen() {
-  const styles = getStyles(theme);
-  const tintColor = themeColors.tint;
-  
-  const [products, setProducts] = useState<ProductDefinition[]>(DEFINITIONS);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadIAP = async () => {
-        setLoading(true);
-        // ** Lógica real: Inicializar IAP y obtener detalles **
-        
-        // 1. Inicializar la conexión
-        // await InAppPurchases.connectAsync();
-        
-        // 2. Obtener productos de las tiendas
-        // const { responseCode, results } = await InAppPurchases.getProductsAsync(PRODUCT_IDS);
-        
-        // ** SIMULACIÓN DE DATOS CARGADOS (Reemplazar con Expo IAP) **
-        const results: ExpoProduct[] = [
-            { productId: 'rizz_5', title: '5 Rizzflows', price: '$0.99', description: '' },
-            { productId: 'rizz_35', title: '35 Rizzflows', price: '$3.99', description: '' },
-            { productId: 'rizz_70', title: '70 Rizzflows', price: '$6.99', description: '' },
-            { productId: 'pro_weekly', title: 'Weekly Pro Access', price: '$9.99', description: '' },
-            { productId: 'monster_monthly', title: 'Monthly Monster Access', price: '$29.99', description: '' },
-            { productId: 'premium_yearly', title: 'Yearly Premium Access', price: '$299.99', description: '' },
-        ];
-        // ** FIN SIMULACIÓN **
-
-        if (results && results.length > 0) {
-            setProducts(prev => 
-                prev.map(p => {
-                    const storeData = results.find(r => r.productId === p.id);
-                    return storeData ? { ...p, storeDetails: storeData } : p;
-                })
-            );
-        } else {
-            Alert.alert("Error", "Could not load store products. Check IDs and app configuration.");
-        }
-
-        // 3. Configurar el listener de compras (Para pagos asíncronos)
-        // const listener = InAppPurchases.setPurchaseListener(({ responseCode, results, cancelled, error }) => {
-        //     if (responseCode === InAppPurchases.IAPResponseCode.OK) {
-        //         results.forEach(purchase => {
-        //             if (purchase.acknowledged) return; // Ya procesado
-        //             fulfillPurchase(purchase, purchase.type === 'Subscription');
-        //             InAppPurchases.finishTransactionAsync(purchase, true); // Finalizar transacción
-        //         });
-        //     }
-        // });
-
-        setLoading(false);
-        
-        // Cleanup function for the listener
-        // return () => InAppPurchases.removePurchaseListener(listener);
-    };
-
-    loadIAP();
-  }, []); // Se ejecuta solo una vez al montar
-
-  const creditPacks = products.filter(p => !p.isSubscription);
-  const subscriptions = products.filter(p => p.isSubscription);
-
-
-  return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Rizzflows Store</Text>
-        
-        <View style={[styles.explanationBox, { borderColor: tintColor, backgroundColor: themeColors.card }]}>
-          <Text style={styles.explanationText}>
-            <Ionicons name="information-circle-outline" size={16} color={tintColor} /> 
-            {' '}1 Rizzflow credit = 1 AI interaction. Buy packs or subscribe for unlimited access!
-          </Text>
-        </View>
-        
-        {loading ? (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={tintColor} />
-                <Text style={[styles.sectionTitle, { marginTop: 15 }]}>
-                    Loading store products...
-                </Text>
+      <ScrollView style={styles.container}>
+        {/* Cabecera con saldo */}
+        <View style={styles.header}>
+            <Text style={styles.title}>Tienda</Text>
+            <View style={styles.balanceContainer}>
+                <Ionicons name="flash" size={16} color={themeColors.text} />
+                <Text style={styles.balanceText}>{isPro ? '∞' : currentFlows} Flows</Text>
             </View>
+        </View>
+
+        {/* Banner Premium o Tarjeta de Venta */}
+        {isPro ? (
+          <View style={styles.proBanner}>
+            <Ionicons name="checkmark-circle" size={28} color="#fff" />
+            <View style={{marginLeft: 12}}>
+                <Text style={styles.proText}>¡Eres Premium!</Text>
+                <Text style={styles.proSubText}>Tienes Flows ilimitados.</Text>
+            </View>
+          </View>
         ) : (
-            <>
-                <Text style={styles.sectionTitle}>Credit Packs (One-Time Purchase)</Text>
-                <View style={styles.productGrid}>
-                    {creditPacks.map((p) => (
-                        <ProductCard key={p.id} product={p} />
-                    ))}
+          <Pressable onPress={presentPaywall} style={styles.premiumCard}>
+             <View style={styles.premiumContent}>
+                <View style={{flex: 1}}>
+                  <Text style={styles.premiumTitle}>Rizzflows Premium</Text>
+                  <Text style={styles.premiumDesc}>Desbloquea todo el poder de tu Rizz.</Text>
+                  <View style={styles.benefitRow}>
+                     <Ionicons name="infinite" size={16} color={themeColors.tint} />
+                     <Text style={styles.benefitText}>Flows Ilimitados</Text>
+                  </View>
+                  <View style={styles.benefitRow}>
+                     <Ionicons name="star" size={16} color={themeColors.tint} />
+                     <Text style={styles.benefitText}>Sin anuncios</Text>
+                  </View>
                 </View>
-                
-                <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Unlimited Subscriptions</Text>
-                <View style={styles.productGrid}>
-                    {subscriptions.map((p) => (
-                        <ProductCard key={p.id} product={p} />
-                    ))}
-                </View>
-            </>
+                <Ionicons name="diamond-outline" size={60} color={themeColors.tint} style={{opacity: 0.8}} />
+             </View>
+             <View style={styles.ctaButton}>
+                <Text style={styles.ctaText}>Ver Planes (Desde $6.99/sem)</Text>
+             </View>
+          </Pressable>
         )}
+
+        <View style={styles.divider} />
+
+        {/* Mostrar consumibles solo si no es Pro (o si quieres que los Pro compren más créditos para algo extra) */}
+        {!isPro && renderConsumables()}
+
+        {/* Botón Restaurar Compras */}
+        <Pressable style={styles.restoreButton} onPress={async () => {
+            try {
+              const customerInfo = await Purchases.restorePurchases();
+              if (customerInfo.entitlements.active['rizzflows_premium']) {
+                setIsPro(true);
+                Alert.alert("Restauración", "Tu acceso Premium ha sido restaurado.");
+              } else {
+                Alert.alert("Restauración", "No se encontraron suscripciones activas.");
+              }
+            } catch (e: any) {
+              Alert.alert("Error", e.message);
+            }
+        }}>
+          <Text style={styles.restoreText}>Restaurar Compras</Text>
+        </Pressable>
 
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// --- Función de estilos tipada correctamente ---
-const getStyles = (theme: ThemeKey) =>
-  StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: themeColors.background,
-    },
-    container: {
-      flex: 1,
-      paddingHorizontal: 20,
-    },
-    scrollContent: {
-      paddingBottom: 50,
-    },
-    title: {
-      fontSize: 30,
-      fontWeight: 'bold',
-      color: themeColors.text,
-      marginBottom: 10,
-      textAlign: 'center',
-    },
-    explanationBox: {
-      borderWidth: 1,
-      borderRadius: 8,
-      padding: 12,
-      marginBottom: 20,
-    },
-    explanationText: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: themeColors.text
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      marginBottom: 15,
-      color: themeColors.text,
-    },
-    productGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-    },
-    cardContainer: {
-      width: '48%', 
-      marginBottom: 15,
-      borderRadius: 12, // Añadido para el gradiente
-      overflow: 'hidden', // Añadido para el gradiente
-    },
-    card: {
-      backgroundColor: themeColors.card,
-      padding: 15,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      minHeight: 160, // Aumentar altura
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      elevation: 2,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 5,
-        backgroundColor: 'transparent', // Asegurar fondo transparente
-    },
-    cardTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: themeColors.text,
-      marginLeft: 5,
-      flexShrink: 1,
-    },
-    cardSubtitle: {
-      fontSize: 12,
-      marginBottom: 10,
-      color: themeColors.icon,
-      backgroundColor: 'transparent', // Asegurar fondo transparente
-    },
-    priceText: {
-      fontSize: 24,
-      fontWeight: '900',
-      marginTop: 'auto', 
-      color: themeColors.text,
-      backgroundColor: 'transparent', // Asegurar fondo transparente
-    },
-    tag: {
-      position: 'absolute',
-      top: -1,
-      right: -1,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderBottomLeftRadius: 8,
-      borderTopRightRadius: 10,
-    },
-    tagText: {
-      color: 'white',
-      fontSize: 10,
-      fontWeight: 'bold',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 50,
-    }
-  });
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: themeColors.background,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: themeColors.text,
+  },
+  balanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeColors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  balanceText: {
+    color: themeColors.text,
+    fontWeight: 'bold',
+    marginLeft: 6,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: themeColors.background,
+  },
+  proBanner: {
+    backgroundColor: themeColors.accentGreen,
+    padding: 20,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  proText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  proSubText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+  },
+  premiumCard: {
+    backgroundColor: themeColors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: themeColors.tint,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  premiumContent: {
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  premiumTitle: {
+    color: themeColors.text,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  premiumDesc: {
+    color: themeColors.icon,
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  benefitText: {
+    color: themeColors.text,
+    fontSize: 14,
+    marginLeft: 6,
+  },
+  ctaButton: {
+    backgroundColor: themeColors.tint,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  ctaText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: themeColors.border,
+    marginVertical: 10,
+  },
+  consumablesContainer: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: themeColors.text,
+    marginBottom: 15,
+  },
+  consumableCard: {
+    backgroundColor: themeColors.card,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  iconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,122,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  consumableTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: themeColors.text,
+  },
+  consumableDesc: {
+    fontSize: 12,
+    color: themeColors.icon,
+  },
+  priceButton: {
+    backgroundColor: themeColors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.tint,
+  },
+  priceText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: themeColors.tint,
+  },
+  restoreButton: {
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  restoreText: {
+    color: themeColors.icon,
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+});

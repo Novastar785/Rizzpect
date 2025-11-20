@@ -1,82 +1,76 @@
 import { supabase } from '@/lib/supabase';
 import { router, Slot, SplashScreen } from 'expo-router';
-import React, { useEffect, useState } from 'react'; // --- 1. Importar useState ---
-import { Platform, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import * as SystemUI from 'expo-system-ui';
 import { useFonts } from 'expo-font'; 
-import AnimatedSplash from '../components/AnimatedSplash'; // --- 2. Importar el nuevo componente ---
+import AnimatedSplash from '../components/AnimatedSplash';
+import { initRevenueCat } from '@/lib/revenuecat'; // Importamos nuestra config
 
 const appTheme = Colors.dark;
+// Mantiene el splash screen nativo visible hasta que le digamos que se oculte
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Cargar fuentes personalizadas
   const [fontsLoaded, fontError] = useFonts({
     'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  // --- 3. Nuevos estados ---
   const [isAppReady, setAppReady] = useState(false);
   const [isSplashAnimationComplete, setSplashAnimationComplete] = useState(false);
-  // --- Fin de nuevos estados ---
 
   useEffect(() => {
     async function prepareApp() {
       try {
-        await SystemUI.setBackgroundColorAsync(appTheme.background); 
+        // Establecer color de fondo del sistema
+        await SystemUI.setBackgroundColorAsync(appTheme.background);
         
-        // --- 4. La lógica de carga de la app ---
-        // (La dejamos casi igual, pero sin ocultar el splash)
+        // 1. Inicializar RevenueCat (Compras)
+        await initRevenueCat();
+        console.log("RevenueCat inicializado");
+
+        // 2. Verificar Sesión de Usuario (Supabase)
         const { data: { session } } = await supabase.auth.getSession();
         
+        // Redirección inicial basada en si hay usuario logueado
         if (session) {
           router.replace('/(app)/(tabs)/home'); 
         } else {
           router.replace('/(auth)/login'); 
         }
         
-        const { data: listener } = supabase.auth.onAuthStateChange(
-          (_event, session) => {
-            if (session) {
-              router.replace('/(app)/(tabs)/home'); 
-            } else {
-              router.replace('/(auth)/login'); 
-            }
+        // Escuchar cambios en la autenticación (Login/Logout)
+        supabase.auth.onAuthStateChange((_event, session) => {
+          if (session) {
+            router.replace('/(app)/(tabs)/home'); 
+          } else {
+            router.replace('/(auth)/login'); 
           }
-        );
-
-        // No retornamos el 'unsubscribe' aquí, lo manejamos de otra forma si es necesario
-        // Pero para el layout raíz, suele estar bien así.
+        });
 
       } catch (e) {
-        console.warn(e);
+        console.warn("Error al iniciar la app:", e);
       } finally {
-        // 5. Avisar que la app está lista (fuentes y sesión)
         setAppReady(true);
       }
     }
 
-    // Esperar a que las fuentes carguen antes de preparar la app
+    // Solo iniciar preparación si las fuentes cargaron (o fallaron)
     if (fontsLoaded || fontError) {
       prepareApp();
     }
 
   }, [fontsLoaded, fontError]); 
 
-  // --- 6. Lógica de renderizado ---
-  // El <Slot> (tu app) se renderiza "debajo" de la animación
-  // para que esté lista para mostrarse.
   return (
     <View style={{ flex: 1 }}>
-      {/* Renderiza la app tan pronto como las fuentes estén listas.
-        Estará oculta por el Splash Nativo, y luego por el Splash Animado.
-      */}
+      {/* Renderiza la app (Slot) solo cuando las fuentes estén listas */}
       {(fontsLoaded || fontError) && <Slot />}
       
-      {/* Muestra la animación encima de la app (que está cargando).
-        'isSplashAnimationComplete' se volverá 'true' cuando la animación termine.
-      */}
+      {/* Muestra el Splash Animado encima hasta que termine */}
       {!isSplashAnimationComplete && (
         <AnimatedSplash
           onAnimationFinish={() => {

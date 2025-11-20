@@ -22,53 +22,68 @@ const theme = 'dark';
 const themeColors = Colors[theme];
 
 export default function RegisterScreen() {
-  const [name, setName] = useState(''); // --- NUEVO: Estado para el nombre ---
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false); 
 
-  const [nameFocused, setNameFocused] = useState(false); // --- NUEVO ---
+  const [nameFocused, setNameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmFocused, setConfirmFocused] = useState(false);
 
 
   async function handleRegister() {
-    // --- CAMBIO: Añadir !name a la validación ---
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      Alert.alert('Error', 'Por favor completa todos los campos.');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
+      Alert.alert('Error', 'Las contraseñas no coinciden.');
       return;
     }
     setLoading(true); 
     
-    // --- CAMBIO: Añadir 'options: { data: { name } }' ---
-    const { error } = await supabase.auth.signUp({
+    // 1. Crear usuario en Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email,
       password: password,
       options: {
         data: {
-          name: name, // Esto se pasará al trigger de Supabase
+          name: name,
         }
       }
     });
-    // --- FIN DEL CAMBIO ---
-    
-    setLoading(false); 
 
-    if (error) {
-      Alert.alert('Error Registering', error.message);
-    } else {
-      Alert.alert(
-        'Success!',
-        'User registered. Please check your email to confirm.'
-      );
-      router.back();
+    if (authError) {
+      setLoading(false);
+      Alert.alert('Error al registrar', authError.message);
+      return;
     }
+
+    // 2. Crear Perfil en Base de Datos con 15 FLOWS GRATIS
+    if (authData.user) {
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+                id: authData.user.id,
+                name: name,
+                flows_balance: 15, // <--- ¡AQUÍ ESTÁN LOS FLOWS GRATIS!
+            });
+        
+        if (profileError) {
+            console.error("Error creando perfil:", profileError);
+        }
+    }
+
+    setLoading(false); 
+    Alert.alert(
+      '¡Éxito!',
+      'Cuenta creada. ¡Has recibido 15 Flows gratis!'
+    );
+    // Si el usuario ya está confirmado, esto ayudará; si no, deberá confirmar email.
+    // Supabase por defecto a veces no requiere confirmación en desarrollo.
   }
 
   return (
@@ -81,26 +96,21 @@ export default function RegisterScreen() {
           source={require('../../assets/images/login-placeholder.png')}
           style={styles.heroImage}
         />
-        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.title}>Crear Cuenta</Text>
         <Text style={styles.subtitle}>
-          Get started with
-          <Text style={styles.link}> Rizzflows</Text>
+          Regístrate y recibe
+          <Text style={styles.link}> 15 Flows Gratis</Text>
         </Text>
 
-        {/* --- NUEVO: Campo de Nombre --- */}
+        {/* Campos de Texto (Nombre, Email, Password, Confirm) */}
         <View style={[
           styles.inputContainer,
           { borderColor: nameFocused ? themeColors.tint : themeColors.border }
         ]}>
-          <Ionicons
-            name="person-outline"
-            size={20}
-            color={nameFocused ? themeColors.tint : themeColors.icon}
-            style={styles.inputIcon}
-          />
+          <Ionicons name="person-outline" size={20} color={nameFocused ? themeColors.tint : themeColors.icon} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Your Name"
+            placeholder="Tu Nombre"
             placeholderTextColor={themeColors.icon}
             value={name}
             onChangeText={setName}
@@ -110,21 +120,15 @@ export default function RegisterScreen() {
             editable={!loading}
           />
         </View>
-        {/* --- FIN DEL NUEVO CAMPO --- */}
 
         <View style={[
           styles.inputContainer,
           { borderColor: emailFocused ? themeColors.tint : themeColors.border }
         ]}>
-          <Ionicons
-            name="mail-outline"
-            size={20}
-            color={emailFocused ? themeColors.tint : themeColors.icon} 
-            style={styles.inputIcon}
-          />
+          <Ionicons name="mail-outline" size={20} color={emailFocused ? themeColors.tint : themeColors.icon} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Email Address"
+            placeholder="Correo Electrónico"
             placeholderTextColor={themeColors.icon}
             value={email}
             onChangeText={setEmail}
@@ -140,15 +144,10 @@ export default function RegisterScreen() {
           styles.inputContainer,
           { borderColor: passwordFocused ? themeColors.tint : themeColors.border }
         ]}>
-          <Ionicons
-            name="lock-closed-outline"
-            size={20}
-            color={passwordFocused ? themeColors.tint : themeColors.icon} 
-            style={styles.inputIcon}
-          />
+          <Ionicons name="lock-closed-outline" size={20} color={passwordFocused ? themeColors.tint : themeColors.icon} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder="Contraseña"
             placeholderTextColor={themeColors.icon}
             value={password}
             onChangeText={setPassword}
@@ -164,15 +163,10 @@ export default function RegisterScreen() {
           styles.inputContainer,
           { borderColor: confirmFocused ? themeColors.tint : themeColors.border }
         ]}>
-          <Ionicons
-            name="lock-closed-outline"
-            size={20}
-            color={confirmFocused ? themeColors.tint : themeColors.icon} 
-            style={styles.inputIcon}
-          />
+          <Ionicons name="lock-closed-outline" size={20} color={confirmFocused ? themeColors.tint : themeColors.icon} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Confirm Password"
+            placeholder="Confirmar Contraseña"
             placeholderTextColor={themeColors.icon}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -184,11 +178,7 @@ export default function RegisterScreen() {
           />
         </View>
 
-        <Pressable 
-          style={styles.buttonWrapper} 
-          onPress={handleRegister}
-          disabled={loading} 
-        >
+        <Pressable style={styles.buttonWrapper} onPress={handleRegister} disabled={loading}>
           <LinearGradient
             colors={[themeColors.tint, themeColors.secondary]}
             start={{ x: 0, y: 0.5 }}
@@ -197,20 +187,16 @@ export default function RegisterScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Register</Text>
+              <Text style={styles.buttonText}>Registrarse y Obtener Flows</Text>
             )}
           </LinearGradient>
         </Pressable>
 
-        <Pressable 
-          style={styles.linkButton} 
-          onPress={() => router.back()}
-          disabled={loading} 
-        >
+        <Pressable style={styles.linkButton} onPress={() => router.back()} disabled={loading}>
           <Text style={[styles.linkButtonText, { color: themeColors.icon }]}>
-            Already have an account?{' '}
+            ¿Ya tienes cuenta?{' '}
             <Text style={{ color: themeColors.tint, fontWeight: 'bold' }}>
-              Login
+              Inicia Sesión
             </Text>
           </Text>
         </Pressable>
@@ -219,7 +205,6 @@ export default function RegisterScreen() {
   );
 }
 
-// ... los estilos permanecen igual, solo añado el paddingRight al input ...
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -233,8 +218,8 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.background,
   },
   heroImage: {
-    width: 150, // Más pequeño
-    height: 150, // Más pequeño
+    width: 120,
+    height: 120,
     resizeMode: 'contain',
     marginBottom: 20,
   },
@@ -242,16 +227,16 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: themeColors.text,
-    marginBottom: 10, // Reducido
+    marginBottom: 10, 
   },
   subtitle: {
     fontSize: 16,
     color: themeColors.icon,
     textAlign: 'center',
-    marginBottom: 30, // Reducido
+    marginBottom: 30, 
   },
   link: {
-    color: themeColors.tint,
+    color: themeColors.accentGreen,
     fontWeight: 'bold',
   },
   inputContainer: {
@@ -262,7 +247,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, 
     borderColor: themeColors.border, 
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   inputIcon: {
     padding: 10,
@@ -276,7 +261,7 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: '100%',
-    borderRadius: 99, // --- CAMBIO: Pill shape ---
+    borderRadius: 99, 
     marginTop: 10,
     shadowColor: themeColors.tint, 
     shadowOffset: { width: 0, height: 4 },
@@ -289,11 +274,11 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 99, // --- CAMBIO: Pill shape ---
+    borderRadius: 99, 
   },
   buttonText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   linkButton: {
