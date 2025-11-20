@@ -1,42 +1,38 @@
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
-// ¡IMPORTANTE!: Usa las "Public SDK Keys" de RevenueCat.
-// NUNCA uses las "Secret API Keys" aquí.
-// Las claves públicas suelen empezar con 'appl_' (iOS) o 'goog_' (Android).
+// CLAVES DE API DE REVENUECAT
+// Usa las "Public SDK Keys" (empiezan con 'appl_' o 'goog_').
+// Para desarrollo local/Expo Go, usa la clave de TEST si la nativa falla.
 
 const API_KEYS = {
-  // Clave real de Android que copiaste del dashboard (empieza por 'goog_')
   google: 'goog_hYhrIPKEIXHjqCydMEetJANwOpY', 
-  
-  // Si tienes la de iOS (empieza por 'appl_'), ponla aquí, si no, deja una cadena vacía o la de test por ahora
   apple: '', 
-  
-  // Clave de prueba (solo para desarrollo, si la necesitas en el futuro)
+  /// Clave de prueba (solo para desarrollo, si la necesitas en el futuro)
   test: 'test_hWpizedMvevsKewEprjxiQLtjzl',
 };
 
 export const initRevenueCat = async () => {
-  // En producción, es mejor desactivar los logs detallados o ponerlos en WARN para no ensuciar la consola
   Purchases.setLogLevel(LOG_LEVEL.WARN);
 
   if (Platform.OS === 'ios') {
-    // Usamos la clave de Apple (si la tuvieras configurada)
     if (API_KEYS.apple) {
         await Purchases.configure({ apiKey: API_KEYS.apple }); 
+    } else {
+        // Fallback a test si no hay key de Apple
+        await Purchases.configure({ apiKey: API_KEYS.test });
     }
   } else if (Platform.OS === 'android') {
-    // Usamos la clave de Google
-    await Purchases.configure({ apiKey: API_KEYS.google });
+    // Intentamos usar la clave de Google. 
+    // Si falla en Expo Go, RevenueCat lanzará un error que capturamos en _layout.tsx
+    // Puedes cambiar esto temporalmente a API_KEYS.test para probar en Expo Go
+    await Purchases.configure({ apiKey: API_KEYS.google }); 
   }
 };
 
-// Función auxiliar para verificar si el usuario es Premium
 export const checkPremiumEntitlement = async (): Promise<boolean> => {
   try {
     const customerInfo = await Purchases.getCustomerInfo();
-    // 'rizzflows_premium' debe coincidir EXACTAMENTE con el ID de Entitlement 
-    // que creaste en el dashboard de RevenueCat
     return customerInfo.entitlements.active['rizzflows_premium'] !== undefined;
   } catch (e) {
     console.error("Error verificando premium:", e);

@@ -18,7 +18,7 @@ export default function StoreScreen() {
   const [loading, setLoading] = useState(true);
   const [currentFlows, setCurrentFlows] = useState(0);
 
-  // Recargar datos cada vez que la pantalla recibe el foco (el usuario entra)
+  // Recargar datos cada vez que la pantalla recibe el foco
   useFocusEffect(
     useCallback(() => {
       fetchData();
@@ -28,7 +28,7 @@ export default function StoreScreen() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Obtener Ofertas de RevenueCat (Suscripciones y Productos)
+      // 1. Obtener Ofertas de RevenueCat
       const offerings = await Purchases.getOfferings();
       if (offerings.current !== null) {
         setOfferings(offerings.current);
@@ -61,9 +61,9 @@ export default function StoreScreen() {
     }
   };
 
-  // --- Mostrar Paywall para Suscripciones ---
+  // --- MOSTRAR PAYWALL DE REVENUECAT ---
   const presentPaywall = async () => {
-    // RevenueCatUI muestra un Paywall nativo pre-diseñado
+    // Esto abre la pantalla de pago nativa que diseñaste en RevenueCat
     const result = await RevenueCatUI.presentPaywall({
       displayCloseButton: true,
       offering: offerings || undefined 
@@ -81,20 +81,21 @@ export default function StoreScreen() {
     }
   };
 
-  // --- Comprar Pack de Créditos (Consumible) ---
+  // --- Lógica de Consumibles (Packs de Flows) ---
   const purchaseFlowsPack = async (pkg: PurchasesPackage) => {
     try {
-      // 1. Ejecutar compra en la tienda (Google Play / App Store)
+      // Compra real
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       
-      // 2. Si la compra fue exitosa, sumar créditos en Supabase
+      // Sumar créditos en Supabase según el ID del producto
       let creditsToAdd = 0;
       if (pkg.product.identifier === 'rizz_40') creditsToAdd = 40;
+      // Añade aquí más IDs si creaste más packs (ej. 'rizz_5', 'rizz_10')
 
       if (creditsToAdd > 0) {
         await addCreditsToSupabase(creditsToAdd);
         Alert.alert("¡Compra Exitosa!", `Se han añadido ${creditsToAdd} Flows a tu cuenta.`);
-        fetchData(); // Actualizar saldo visualmente
+        fetchData(); 
       }
 
     } catch (e: any) {
@@ -108,7 +109,6 @@ export default function StoreScreen() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Obtener saldo actual
     const { data: current } = await supabase
       .from('profiles')
       .select('flows_balance')
@@ -117,7 +117,6 @@ export default function StoreScreen() {
     
     const newBalance = (current?.flows_balance || 0) + amount;
 
-    // Actualizar saldo
     const { error } = await supabase
       .from('profiles')
       .update({ flows_balance: newBalance })
@@ -126,40 +125,38 @@ export default function StoreScreen() {
     if (error) console.error("Error actualizando base de datos:", error);
   };
 
-  // Renderizar tarjeta manual para el consumible (40 Flows)
+  // Renderizar tarjeta manual para consumibles (si existen en RevenueCat)
   const renderConsumables = () => {
     if (!offerings) return null;
     
-    // Buscar el paquete 'rizz_40' dentro de las ofertas disponibles
-    const flowPackage = offerings.availablePackages.find(p => 
-      p.product.identifier === 'rizz_40'
+    // Buscar paquetes que empiecen con 'rizz_' (tus consumibles)
+    const consumablePackages = offerings.availablePackages.filter(p => 
+      p.product.identifier.startsWith('rizz_')
     );
 
-    if (!flowPackage) return (
-       <Text style={{color: 'gray', textAlign: 'center', marginVertical: 10, padding: 20}}>
-         (Producto 'rizz_40' no encontrado en RevenueCat. Asegúrate de configurarlo en el Offering 'Default'.)
-       </Text>
-    );
+    if (consumablePackages.length === 0) return null;
 
     return (
       <View style={styles.consumablesContainer}>
         <Text style={styles.sectionTitle}>Recarga Flows</Text>
-        
-        <Pressable 
-            style={styles.consumableCard}
-            onPress={() => purchaseFlowsPack(flowPackage)}
-        >
-            <View style={styles.iconBg}>
-                <Ionicons name="flash" size={24} color={themeColors.secondary} />
-            </View>
-            <View style={{flex: 1, paddingHorizontal: 12}}>
-                <Text style={styles.consumableTitle}>40 Flows</Text>
-                <Text style={styles.consumableDesc}>Paga solo lo que usas</Text>
-            </View>
-            <View style={styles.priceButton}>
-                <Text style={styles.priceText}>{flowPackage.product.priceString}</Text>
-            </View>
-        </Pressable>
+        {consumablePackages.map((pkg) => (
+            <Pressable 
+                key={pkg.identifier}
+                style={styles.consumableCard}
+                onPress={() => purchaseFlowsPack(pkg)}
+            >
+                <View style={styles.iconBg}>
+                    <Ionicons name="flash" size={24} color={themeColors.secondary} />
+                </View>
+                <View style={{flex: 1, paddingHorizontal: 12}}>
+                    <Text style={styles.consumableTitle}>{pkg.product.title}</Text>
+                    <Text style={styles.consumableDesc}>{pkg.product.description}</Text>
+                </View>
+                <View style={styles.priceButton}>
+                    <Text style={styles.priceText}>{pkg.product.priceString}</Text>
+                </View>
+            </Pressable>
+        ))}
       </View>
     );
   };
@@ -175,7 +172,6 @@ export default function StoreScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
-        {/* Cabecera con saldo */}
         <View style={styles.header}>
             <Text style={styles.title}>Tienda</Text>
             <View style={styles.balanceContainer}>
@@ -184,7 +180,6 @@ export default function StoreScreen() {
             </View>
         </View>
 
-        {/* Banner Premium o Tarjeta de Venta */}
         {isPro ? (
           <View style={styles.proBanner}>
             <Ionicons name="checkmark-circle" size={28} color="#fff" />
@@ -211,26 +206,19 @@ export default function StoreScreen() {
                 <Ionicons name="diamond-outline" size={60} color={themeColors.tint} style={{opacity: 0.8}} />
              </View>
              <View style={styles.ctaButton}>
-                <Text style={styles.ctaText}>Ver Planes (Desde $6.99/sem)</Text>
+                <Text style={styles.ctaText}>Ver Planes</Text>
              </View>
           </Pressable>
         )}
 
         <View style={styles.divider} />
 
-        {/* Mostrar consumibles solo si no es Pro (o si quieres que los Pro compren más créditos para algo extra) */}
         {!isPro && renderConsumables()}
 
-        {/* Botón Restaurar Compras */}
         <Pressable style={styles.restoreButton} onPress={async () => {
             try {
-              const customerInfo = await Purchases.restorePurchases();
-              if (customerInfo.entitlements.active['rizzflows_premium']) {
-                setIsPro(true);
-                Alert.alert("Restauración", "Tu acceso Premium ha sido restaurado.");
-              } else {
-                Alert.alert("Restauración", "No se encontraron suscripciones activas.");
-              }
+              await Purchases.restorePurchases();
+              Alert.alert("Restauración", "Compras restauradas.");
             } catch (e: any) {
               Alert.alert("Error", e.message);
             }

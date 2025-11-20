@@ -1,29 +1,18 @@
-import { StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
-import { supabase } from '@/lib/supabase';
-import { Text, View } from '@/components/Themed';
+import { StyleSheet, Pressable, Alert, View } from 'react-native';
+import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import RevenueCatUI from 'react-native-purchases-ui';
-import Purchases from 'react-native-purchases';
 
 const theme = 'dark';
 const themeColors = Colors[theme];
 
-const StatCard = ({ icon, label, value, color }: { icon: any, label: string, value: string, color: string }) => (
-  <View style={styles.statCard}>
-    <Ionicons name={icon} size={24} color={color} />
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </View>
-);
-
-const SettingsRow = ({ icon, label, onPress }: { icon: any, label: string, onPress: () => void }) => (
+const SettingsRow = ({ icon, label, onPress, color = themeColors.tint }: { icon: any, label: string, onPress: () => void, color?: string }) => (
   <Pressable style={styles.settingsRow} onPress={onPress}>
-    <View style={styles.settingsIconContainer}>
-      <Ionicons name={icon} size={20} color={themeColors.tint} />
+    <View style={[styles.settingsIconContainer, { backgroundColor: `${color}20` }]}>
+      <Ionicons name={icon} size={20} color={color} />
     </View>
     <Text style={styles.settingsLabel}>{label}</Text>
     <Ionicons name="chevron-forward-outline" size={20} color={themeColors.icon} />
@@ -31,258 +20,107 @@ const SettingsRow = ({ icon, label, onPress }: { icon: any, label: string, onPre
 );
 
 export default function ProfileScreen() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [flowsBalance, setFlowsBalance] = useState(0);
-  const [isPro, setIsPro] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      const fetchUserData = async () => {
-        setLoading(true);
-        
-        // 1. Verificar estado Pro
-        try {
-           const customerInfo = await Purchases.getCustomerInfo();
-           if (customerInfo.entitlements.active['rizzflows_premium']) {
-             setIsPro(true);
-           }
-        } catch (e) {
-            // ignorar error
-        }
-
-        // 2. Obtener datos del usuario y flows
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (user) {
-          setEmail(user.email || 'Sin email');
-          
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('name, flows_balance')
-            .eq('id', user.id)
-            .single();
-
-          if (profile) {
-            setName(profile.name || 'Sin nombre');
-            setFlowsBalance(profile.flows_balance || 0);
-          }
-        }
-        setLoading(false);
-      };
-
-      fetchUserData();
-    }, [])
-  );
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
-  // Abre el Customer Center para gestionar suscripciones
+  
+  // 1. Manage Subscription (Cancel, Billing history)
   const openCustomerCenter = async () => {
     try {
       await RevenueCatUI.presentCustomerCenter();
     } catch (e) {
-      Alert.alert("Info", "Gestiona tu suscripción desde los ajustes de tu dispositivo.");
+      Alert.alert("Info", "You can manage your subscription in your device Settings.");
+    }
+  };
+
+  // 2. Upgrade Plan (Switch from Weekly to Annual, etc.)
+  const openUpgradePaywall = async () => {
+    try {
+        // Presenting the paywall to a subscribed user allows them to switch plans.
+        // displayCloseButton: true allows them to cancel the upgrade attempt.
+        await RevenueCatUI.presentPaywall({
+            displayCloseButton: true 
+        });
+    } catch (e) {
+        console.log("Paywall closed or failed", e);
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={themeColors.tint} />
-          </View>
-        ) : (
-          <>
-            <View style={styles.profileHeader}>
-              <View style={styles.avatar}>
-                <Ionicons name="person-outline" size={40} color={themeColors.tint} />
-              </View>
-              <Text style={styles.username}>{name}</Text>
-              <Text style={styles.userEmail}>{email}</Text>
-              
-              <View style={[styles.badge, { backgroundColor: isPro ? themeColors.accentGreen : themeColors.card }]}>
-                 <Ionicons name={isPro ? "infinite" : "flash"} size={14} color={isPro ? "#fff" : themeColors.icon} />
-                 <Text style={[styles.badgeText, { color: isPro ? "#fff" : themeColors.icon }]}>
-                    {isPro ? "Premium Activo" : `${flowsBalance} Flows`}
-                 </Text>
-              </View>
+        <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+               <Ionicons name="person" size={40} color={themeColors.tint} />
             </View>
-            
-            <View style={styles.statsContainer}>
-              <StatCard icon="wallet-outline" label="Flows" value={isPro ? "∞" : flowsBalance.toString()} color={themeColors.secondary} />
-              <StatCard icon="heart-outline" label="Éxitos" value="5" color={themeColors.accentRed} />
-              <StatCard icon="flame-outline" label="Racha" value="3" color={themeColors.tint} />
+            <Text style={styles.username}>Premium Member</Text>
+            <View style={[styles.badge, { backgroundColor: themeColors.accentGreen }]}>
+                <Ionicons name="infinite" size={14} color="#fff" />
+                <Text style={[styles.badgeText, { color: "#fff" }]}>Active Subscription</Text>
             </View>
+        </View>
 
-            <View style={styles.settingsContainer}>
-              <SettingsRow 
+        <Text style={styles.sectionTitle}>Subscription</Text>
+        <View style={styles.settingsContainer}>
+            <SettingsRow 
                 icon="card-outline" 
-                label="Gestionar Suscripción" 
+                label="Manage Subscription" 
                 onPress={openCustomerCenter} 
-              />
-              <SettingsRow 
-                icon="cart-outline" 
-                label="Comprar Flows" 
-                onPress={() => router.navigate('/(app)/(tabs)/store')} 
-              />
-              <SettingsRow 
-                icon="person-circle-outline" 
-                label="Editar Perfil" 
-                onPress={() => {}} 
-              />
-            </View>
+            />
+             {/* LOGIC FOR UPGRADE: Showing the paywall again allows users to select a different product */}
+            <SettingsRow 
+                icon="rocket-outline" 
+                label="Change Plan / Upgrade" 
+                color={themeColors.secondary}
+                onPress={openUpgradePaywall} 
+            />
+        </View>
 
-            <Pressable
-              onPress={handleLogout}
-              style={({ pressed }) => [
-                styles.logoutButton,
-                { 
-                  backgroundColor: themeColors.card, 
-                  opacity: pressed ? 0.7 : 1 
-                }
-              ]}
-            >
-              <Ionicons name="log-out-outline" size={20} color={themeColors.accentRed} style={{ marginRight: 10 }} />
-              <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-            </Pressable>
-          </>
-        )}
+        <Text style={styles.sectionTitle}>Legal</Text>
+        <View style={styles.settingsContainer}>
+            <SettingsRow 
+                icon="document-text-outline" 
+                label="Terms of Service" 
+                color={themeColors.icon}
+                onPress={() => {}} 
+            />
+            <SettingsRow 
+                icon="shield-checkmark-outline" 
+                label="Privacy Policy" 
+                color={themeColors.icon}
+                onPress={() => {}} 
+            />
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: themeColors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
+  safeArea: { flex: 1, backgroundColor: themeColors.background },
+  container: { flex: 1, padding: 20 },
+  profileHeader: { alignItems: 'center', marginBottom: 30, marginTop: 10 },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: themeColors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: themeColors.tint,
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: themeColors.card, justifyContent: 'center', alignItems: 'center',
+    marginBottom: 15, borderWidth: 2, borderColor: themeColors.tint,
   },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: themeColors.text,
-  },
-  userEmail: {
-    fontSize: 16,
-    color: themeColors.icon,
-    marginBottom: 8,
-  },
+  username: { fontSize: 24, fontWeight: 'bold', color: themeColors.text, marginBottom: 10 },
   badge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 4,
+      flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6,
       borderRadius: 12,
-      borderWidth: 1,
-      borderColor: themeColors.border,
   },
-  badgeText: {
-      fontWeight: 'bold',
-      marginLeft: 6,
-      fontSize: 14,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 30,
-  },
-  statCard: {
-    backgroundColor: themeColors.card,
-    borderRadius: 16,
-    padding: 15,
-    alignItems: 'center',
-    width: '30%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: themeColors.text,
-    marginTop: 8,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: themeColors.icon,
-    marginTop: 2,
+  badgeText: { fontWeight: 'bold', marginLeft: 6, fontSize: 14 },
+  sectionTitle: {
+    fontSize: 14, fontWeight: 'bold', color: themeColors.icon, marginBottom: 10, marginLeft: 5, textTransform: 'uppercase'
   },
   settingsContainer: {
-    backgroundColor: themeColors.card,
-    borderRadius: 16,
-    marginBottom: 20,
-    overflow: 'hidden',
+    backgroundColor: themeColors.card, borderRadius: 16, overflow: 'hidden', marginBottom: 25
   },
   settingsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 12,
-    backgroundColor: 'transparent',
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 15,
+    borderBottomWidth: 1, borderBottomColor: themeColors.border,
   },
   settingsIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(192, 57, 255, 0.15)', 
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    width: 32, height: 32, borderRadius: 8, 
+    justifyContent: 'center', alignItems: 'center', marginRight: 15,
   },
-  settingsLabel: {
-    flex: 1,
-    fontSize: 16,
-    color: themeColors.text,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    padding: 15,
-    borderRadius: 12, 
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 'auto',
-    borderWidth: 1,
-    borderColor: themeColors.accentRed,
-  },
-  logoutButtonText: {
-    color: themeColors.accentRed,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  settingsLabel: { flex: 1, fontSize: 16, color: themeColors.text },
 });

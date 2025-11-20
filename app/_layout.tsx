@@ -1,82 +1,58 @@
-import { supabase } from '@/lib/supabase';
 import { router, Slot, SplashScreen } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-
 import Colors from '@/constants/Colors';
 import * as SystemUI from 'expo-system-ui';
 import { useFonts } from 'expo-font'; 
 import AnimatedSplash from '../components/AnimatedSplash';
-import { initRevenueCat } from '@/lib/revenuecat'; // Importamos nuestra config
+import { initRevenueCat } from '@/lib/revenuecat'; 
+import Purchases from 'react-native-purchases';
 
 const appTheme = Colors.dark;
-// Mantiene el splash screen nativo visible hasta que le digamos que se oculte
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  // Cargar fuentes personalizadas
   const [fontsLoaded, fontError] = useFonts({
     'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-
-  const [isAppReady, setAppReady] = useState(false);
   const [isSplashAnimationComplete, setSplashAnimationComplete] = useState(false);
 
   useEffect(() => {
-    async function prepareApp() {
+    async function checkSubscription() {
       try {
-        // Establecer color de fondo del sistema
         await SystemUI.setBackgroundColorAsync(appTheme.background);
         
-        // 1. Inicializar RevenueCat (Compras)
+        // 1. Initialize RevenueCat
         await initRevenueCat();
-        console.log("RevenueCat inicializado");
 
-        // 2. Verificar Sesión de Usuario (Supabase)
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        // Redirección inicial basada en si hay usuario logueado
-        if (session) {
-          router.replace('/(app)/(tabs)/home'); 
+        // 2. Check Subscription Status
+        const customerInfo = await Purchases.getCustomerInfo();
+        const isPro = typeof customerInfo.entitlements.active['rizzflows_premium'] !== "undefined";
+
+        // 3. Traffic Light Logic
+        if (isPro) {
+          router.replace('/(app)/(tabs)/home'); // Valid Subscription -> Go to App
         } else {
-          router.replace('/(auth)/login'); 
+          router.replace('/paywall'); // No Subscription -> Go to Paywall
         }
-        
-        // Escuchar cambios en la autenticación (Login/Logout)
-        supabase.auth.onAuthStateChange((_event, session) => {
-          if (session) {
-            router.replace('/(app)/(tabs)/home'); 
-          } else {
-            router.replace('/(auth)/login'); 
-          }
-        });
-
       } catch (e) {
-        console.warn("Error al iniciar la app:", e);
-      } finally {
-        setAppReady(true);
+        console.warn("Subscription check failed:", e);
+        // Fallback to paywall on error ensures we don't give free access accidentally
+        router.replace('/paywall'); 
       }
     }
 
-    // Solo iniciar preparación si las fuentes cargaron (o fallaron)
+    // Only start checking once fonts are loaded or failed
     if (fontsLoaded || fontError) {
-      prepareApp();
+      checkSubscription();
     }
-
-  }, [fontsLoaded, fontError]); 
+  }, [fontsLoaded, fontError]);
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Renderiza la app (Slot) solo cuando las fuentes estén listas */}
       {(fontsLoaded || fontError) && <Slot />}
-      
-      {/* Muestra el Splash Animado encima hasta que termine */}
       {!isSplashAnimationComplete && (
-        <AnimatedSplash
-          onAnimationFinish={() => {
-            setSplashAnimationComplete(true);
-          }}
-        />
+        <AnimatedSplash onAnimationFinish={() => setSplashAnimationComplete(true)} />
       )}
     </View>
   );

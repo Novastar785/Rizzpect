@@ -3,27 +3,19 @@ import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Pressable, Image, ScrollView } from 'react-native'; // --- 1. Importar ScrollView ---
+import { StyleSheet, Pressable, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 
-// Forzamos el tema oscuro
 const theme = 'dark';
 const themeColors = Colors[theme];
 
-// --- NUEVO: Componente de Mockup de Cita ---
-// Esta es la "captura de pantalla falsa" que mencionaste
 function MockupPreview() {
   return (
     <View style={styles.mockupContainer}>
-      {/* Perfil Falso */}
       <View style={styles.mockupProfileCard}>
         <Image
-          // --- CORRECCIÓN DE RUTA ---
-          // Necesitamos subir 3 niveles: (tabs) -> (app) -> app -> raíz
           source={require('../../../assets/images/mock_profile.png')}
-          // Por ahora, usamos un ícono
-          // source={{ uri: 'https://placehold.co/100x100/C039FF/FFFFFF?text=A&font=inter' }}
           style={styles.mockupImage}
           onError={(e) => console.log('Error loading local image', e.nativeEvent.error)}
         />
@@ -33,7 +25,6 @@ function MockupPreview() {
         </Text>
       </View>
 
-      {/* Respuesta Falsa de Rizzflow */}
       <View style={styles.mockupRizzBubble}>
         <Text style={styles.mockupRizzLabel}>
           <Ionicons name="sparkles" size={16} color={themeColors.tint} />
@@ -44,7 +35,6 @@ function MockupPreview() {
         </Text>
       </View>
 
-      {/* Resultado Falso */}
       <View style={styles.mockupMatchBubble}>
         <Text style={styles.mockupMatchText}>
           <Ionicons name="heart" size={16} color={themeColors.accentRed} />
@@ -54,7 +44,6 @@ function MockupPreview() {
     </View>
   );
 }
-// --- FIN: Componente de Mockup de Cita ---
 
 export default function HomeScreen() {
   const goToRizz = () => {
@@ -63,13 +52,10 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* --- 2. Cambiar View por ScrollView --- */}
       <ScrollView 
         style={styles.scrollContainer} 
         contentContainerStyle={styles.contentContainer}
       >
-        
-        {/* --- Mockup Añadido --- */}
         <MockupPreview />
 
         <Text style={styles.title}>Welcome to Rizzflows</Text>
@@ -91,7 +77,6 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        {/* --- Botón de Acción Principal --- */}
         <Pressable style={styles.buttonWrapper} onPress={goToRizz}>
           <ExpoLinearGradient
             colors={[themeColors.tint, themeColors.secondary]}
@@ -104,7 +89,6 @@ export default function HomeScreen() {
         </Pressable>
 
       </ScrollView>
-      {/* --- 2. Fin del cambio --- */}
     </SafeAreaView>
   );
 }
@@ -114,20 +98,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: themeColors.background,
   },
-  // --- 3. NUEVOS estilos para ScrollView ---
   scrollContainer: {
     flex: 1,
   },
   contentContainer: {
-  // --- 3. Estilo 'container' renombrado y modificado ---
-    // flex: 1, // <--- Eliminado
     paddingHorizontal: 20,
     alignItems: 'center',
     backgroundColor: themeColors.background,
     paddingTop: 10,
-    paddingBottom: 40, // <--- Añadido padding inferior
+    paddingBottom: 40, 
   },
-  // --- NUEVO: Estilos para el Mockup ---
   mockupContainer: {
     width: '100%',
     backgroundColor: themeColors.card,
@@ -165,7 +145,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   mockupRizzBubble: {
-    backgroundColor: 'rgba(192, 57, 255, 0.15)', // Fondo púrpura claro
+    backgroundColor: 'rgba(192, 57, 255, 0.15)', 
     borderRadius: 12,
     padding: 12,
     width: '100%',
@@ -185,7 +165,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   mockupMatchBubble: {
-    backgroundColor: 'rgba(255, 59, 48, 0.15)', // Fondo rojo claro
+    backgroundColor: 'rgba(255, 59, 48, 0.15)', 
     borderRadius: 99,
     paddingVertical: 4,
     paddingHorizontal: 12,
@@ -198,7 +178,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: themeColors.accentRed,
   },
-  // --- FIN: Estilos Mockup ---
   title: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -235,9 +214,9 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: '100%',
-    borderRadius: 99, // Botón tipo "pill"
+    borderRadius: 99,
     marginTop: 10,
-    shadowColor: themeColors.tint, // Sombra de color
+    shadowColor: themeColors.tint,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -249,7 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
-    borderRadius: 99, // Botón tipo "pill"
+    borderRadius: 99,
     width: '100%',
   },
   buttonText: {
