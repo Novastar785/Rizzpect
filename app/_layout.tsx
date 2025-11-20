@@ -15,8 +15,8 @@ const appTheme = Colors.dark;
 SplashScreen.preventAutoHideAsync();
 
 // --- CONFIGURACIÓN DE MODO PRUEBA ---
-// Pon esto en 'true' para probar en Expo Go sin verificaciones de pago.
-// Pon esto en 'false' para la versión de producción o para probar el flujo real de pagos.
+// Cambia a false para probar el flujo real de producción (con Paywall)
+// Cambia a true para saltar el Paywall y probar la app en desarrollo
 const IS_DEV_MODE = true; 
 // ------------------------------------
 
@@ -25,54 +25,74 @@ export default function RootLayout() {
     'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   const [isSplashAnimationComplete, setSplashAnimationComplete] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    async function checkSubscription() {
-      await SystemUI.setBackgroundColorAsync(appTheme.background);
-
-      // --- LÓGICA DE BYPASS PARA DESARROLLO ---
-      if (IS_DEV_MODE) {
-        console.log("⚠️ MODO DESARROLLO ACTIVO: Saltando verificación de RevenueCat");
-        // Intentamos inicializar para que no exploten otras pantallas, 
-        // pero si falla no importa, vamos al home igual.
-        try { await initRevenueCat(); } catch (e) { console.log("RevenueCat init skipped/failed in Dev Mode"); }
-        
-        router.replace('/(app)/(tabs)/home'); 
-        return; 
-      }
-      // ----------------------------------------
-
+    async function prepareApp() {
       try {
-        // 1. Initialize RevenueCat
-        await initRevenueCat();
-
-        // 2. Check Subscription Status
-        const customerInfo = await Purchases.getCustomerInfo();
-        const isPro = typeof customerInfo.entitlements.active['rizzflows_premium'] !== "undefined";
-
-        // 3. Traffic Light Logic
-        if (isPro) {
-          router.replace('/(app)/(tabs)/home'); // Valid Subscription -> Go to App
-        } else {
-          router.replace('/paywall'); // No Subscription -> Go to Paywall
+        await SystemUI.setBackgroundColorAsync(appTheme.background);
+        
+        // Inicializar RevenueCat
+        // En modo dev, intentamos inicializar pero no bloqueamos si falla
+        try {
+            await initRevenueCat();
+        } catch (e) {
+            console.warn("RevenueCat init error (ignorable in dev mode):", e);
         }
+
       } catch (e) {
-        console.warn("Subscription check failed:", e);
-        // Fallback to paywall on error ensures we don't give free access accidentally
-        // (Unless we are in dev mode handled above)
+        console.warn("Error inicializando la app:", e);
+      } finally {
+        setIsReady(true);
+      }
+    }
+
+    prepareApp();
+  }, []);
+
+  useEffect(() => {
+    // Solo procedemos cuando las fuentes, la inicialización y el splash han terminado
+    if (fontsLoaded && isReady && isSplashAnimationComplete) {
+      checkSubscriptionAndNavigate();
+    }
+  }, [fontsLoaded, isReady, isSplashAnimationComplete]);
+
+
+  const checkSubscriptionAndNavigate = async () => {
+    // BYPASS PARA DESARROLLO
+    if (IS_DEV_MODE) {
+      console.log("⚠️ MODO DESARROLLO: Saltando Paywall y yendo a /rizz");
+      router.replace('/(app)/(tabs)/rizz');
+      return;
+    }
+
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      const isPro = typeof customerInfo.entitlements.active['rizzflows_premium'] !== "undefined";
+
+      if (isPro) {
+        // Usuario Premium -> Va directo a la funcionalidad principal
+        router.replace('/(app)/(tabs)/rizz'); 
+      } else {
+        // Usuario nuevo o sin suscripción -> Paywall directo
         router.replace('/paywall'); 
       }
+    } catch (e) {
+      console.error("Error verificando suscripción:", e);
+      // En caso de error en producción, por seguridad mandamos al paywall
+      // A menos que estemos en dev mode (ya manejado arriba)
+      router.replace('/paywall');
     }
+  };
 
-    // Only start checking once fonts are loaded or failed
-    if (fontsLoaded || fontError) {
-      checkSubscription();
-    }
-  }, [fontsLoaded, fontError]);
+  // Si hay error de fuentes, retornamos null o un error
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
-    <View style={{ flex: 1 }}>
-      {(fontsLoaded || fontError) && <Slot />}
+    <View style={{ flex: 1, backgroundColor: appTheme.background }}>
+      <Slot />
       {!isSplashAnimationComplete && (
         <AnimatedSplash onAnimationFinish={() => setSplashAnimationComplete(true)} />
       )}

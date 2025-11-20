@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
 
 const theme = 'dark';
 const themeColors = Colors[theme];
@@ -76,13 +77,13 @@ export default function ProfileScreen() {
                 icon="document-text-outline" 
                 label={t('profile.terms')} 
                 color={themeColors.icon}
-                onPress={() => {}} 
+                onPress={() => router.push('/(app)/legal/terms')} 
             />
             <SettingsRow 
                 icon="shield-checkmark-outline" 
                 label={t('profile.privacy')} 
                 color={themeColors.icon}
-                onPress={() => {}} 
+                onPress={() => router.push('/(app)/legal/privacy')} 
             />
         </View>
       </View>

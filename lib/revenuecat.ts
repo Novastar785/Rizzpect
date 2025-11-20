@@ -28,6 +28,15 @@ export const initRevenueCat = async () => {
     // Puedes cambiar esto temporalmente a API_KEYS.test para probar en Expo Go
     await Purchases.configure({ apiKey: API_KEYS.google }); 
   }
+
+  // --- LIMPIEZA DE SUPABASE ---
+  // Anteriormente, aquí podríamos haber tenido código como:
+  // const user = supabase.auth.user();
+  // if (user) Purchases.logIn(user.id);
+  
+  // Como ya no usamos Supabase Auth, dejamos que RevenueCat genere un ID anónimo
+  // automáticamente. No necesitamos llamar a Purchases.logIn() a menos que
+  // implementes tu propio sistema de usuarios en el futuro.
 };
 
 export const checkPremiumEntitlement = async (): Promise<boolean> => {

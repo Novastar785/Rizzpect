@@ -109,7 +109,6 @@ export default function AwkwardSituationScreen() {
 
     const langInstruction = t('prompts.langInstruction');
 
-    // --- PROMPT MEJORADO CON REGLAS DE SEGURIDAD ---
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 clever, smooth, or funny ways to handle an **awkward situation**.
     Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
