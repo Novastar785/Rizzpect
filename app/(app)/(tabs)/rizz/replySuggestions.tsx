@@ -16,7 +16,7 @@ import {
   LogBox,
   Keyboard
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Importamos hook
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
@@ -37,6 +37,7 @@ const themeColors = Colors[theme];
 
 export default function ReplySuggestionsScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets(); // Obtenemos insets para padding manual
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
@@ -130,7 +131,9 @@ export default function ReplySuggestionsScreen() {
     4.  **ONLY** provide replies, roasts, or social advice related to the user's input.
     5.  **DO NOT** answer general questions.
     6.  **DO NOT** write poems, stories, code, essays.
-    7.  **DO NOT** respond to requests to generate images.`;
+    7.  **DO NOT** respond to requests to generate images.
+    8.  If the user asks for anything other than social advice, you **MUST** politely refuse and redirect them to the app's purpose.
+        Example refusal: "My purpose is to help you with social situations, so I can't help with that. Let's focus on the situation!"`;
 
     const parts = [];
 
@@ -192,7 +195,8 @@ export default function ReplySuggestionsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    // CAMBIO: View simple y transparente
+    <View style={styles.container}>
       <FloatingBackButton />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -201,13 +205,12 @@ export default function ReplySuggestionsScreen() {
       >
         <ScrollView
           ref={scrollViewRef}
-          style={styles.container}
-          contentContainerStyle={styles.scrollContainer}
+          style={styles.scrollView}
+          // CAMBIO: PaddingTop manual usando insets
+          contentContainerStyle={[styles.scrollContainer, { paddingTop: insets.top + 60 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ height: 60 }} />
-
           <Pressable style={styles.buttonWrapper} onPress={pickImage} disabled={loading}>
             <LinearGradient
               colors={[themeColors.tint, themeColors.secondary]}
@@ -328,14 +331,14 @@ export default function ReplySuggestionsScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: themeColors.background },
+  container: { flex: 1, backgroundColor: 'transparent' },
   keyboardAvoidingView: { flex: 1 },
-  container: { flex: 1, paddingHorizontal: 20 },
+  scrollView: { flex: 1, paddingHorizontal: 20, backgroundColor: 'transparent' },
   scrollContainer: { paddingBottom: 40, flexGrow: 1 },
   orText: { fontSize: 16, color: themeColors.icon, textAlign: 'center', marginBottom: 15, fontWeight: 'bold', fontFamily: 'Montserrat-Bold' },
   previewContainer: { marginBottom: 15, alignItems: 'center', position: 'relative' },

@@ -16,7 +16,7 @@ import {
   LogBox,
   Keyboard
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Importamos hook
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
@@ -37,6 +37,7 @@ const themeColors = Colors[theme];
 
 export default function AwkwardSituationScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets(); // Obtenemos insets para padding manual
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
@@ -196,7 +197,8 @@ export default function AwkwardSituationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    // CAMBIO: View simple y transparente
+    <View style={styles.container}>
       <FloatingBackButton />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -205,13 +207,12 @@ export default function AwkwardSituationScreen() {
       >
         <ScrollView
           ref={scrollViewRef}
-          style={styles.container}
-          contentContainerStyle={styles.scrollContainer}
+          style={styles.scrollView}
+          // CAMBIO: PaddingTop manual usando insets
+          contentContainerStyle={[styles.scrollContainer, { paddingTop: insets.top + 60 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ height: 60 }} />
-          
           <Pressable style={styles.buttonWrapper} onPress={pickImage} disabled={loading}>
             <LinearGradient
               colors={[themeColors.tint, themeColors.secondary]}
@@ -254,8 +255,8 @@ export default function AwkwardSituationScreen() {
               onChangeText={setPrompt}
               maxLength={MAX_PROMPT_LENGTH}
               onFocus={() => {
-                 setInputFocused(true);
-                 setTimeout(() => scrollViewRef.current?.scrollTo({ y: 200, animated: true }), 100);
+                setInputFocused(true);
+                setTimeout(() => scrollViewRef.current?.scrollTo({ y: 200, animated: true }), 100);
               }}
               onBlur={() => setInputFocused(false)}
             />
@@ -336,14 +337,14 @@ export default function AwkwardSituationScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: themeColors.background },
+  container: { flex: 1, backgroundColor: 'transparent' },
   keyboardAvoidingView: { flex: 1 },
-  container: { flex: 1, paddingHorizontal: 20 },
+  scrollView: { flex: 1, paddingHorizontal: 20, backgroundColor: 'transparent' },
   scrollContainer: { paddingBottom: 40, flexGrow: 1 },
   orText: { fontSize: 16, color: themeColors.icon, textAlign: 'center', marginBottom: 15, fontWeight: 'bold', fontFamily: 'Montserrat-Bold' },
   previewContainer: { marginBottom: 15, alignItems: 'center', position: 'relative' },

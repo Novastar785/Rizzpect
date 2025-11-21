@@ -8,8 +8,9 @@ import {
   Pressable,
   Alert,
   ScrollView,
+  Platform, // Añadido para detectar plataforma si es necesario
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Importar insets
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
@@ -25,6 +26,7 @@ const themeColors = Colors[theme];
 
 export default function PickupLinesScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets(); // Insets
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<string[]>([]);
   const [selectedTone, setSelectedTone] = useState(TONES[0]);
@@ -129,14 +131,16 @@ export default function PickupLinesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    // CAMBIO: Usamos un View simple transparente en lugar de SafeAreaView o cualquier otro contenedor opaco
+    <View style={styles.container}> 
       <FloatingBackButton />
       <ScrollView
         ref={scrollViewRef}
-        style={styles.container}
-        contentContainerStyle={styles.scrollContainer}
+        style={styles.scrollView}
+        // CAMBIO: Aplicamos el padding superior dinámico aquí para evitar la barra negra
+        contentContainerStyle={[styles.scrollContainer, { paddingTop: insets.top + 60 }]}
       >
-        <View style={{ height: 60 }} />
+        {/* Eliminamos el View espaciador que tenías antes */}
 
         <Text style={styles.subtitle}>{t('rizz.pickup.subtitle')}</Text>
 
@@ -209,13 +213,13 @@ export default function PickupLinesScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: themeColors.background },
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, backgroundColor: 'transparent' }, // Transparente para ver el fondo del Layout
+  scrollView: { flex: 1, paddingHorizontal: 20, backgroundColor: 'transparent' }, // Padding lateral consistente con otras pantallas
   scrollContainer: { paddingBottom: 100 },
   subtitle: { fontSize: 16, color: themeColors.icon, marginBottom: 15, textAlign: 'center', fontFamily: 'Montserrat-Regular' },
   tonalityContainer: { marginBottom: 20 },
@@ -233,6 +237,7 @@ const styles = StyleSheet.create({
   buttonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 15, borderRadius: 99, width: '100%' },
   buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 10, fontFamily: 'Montserrat-Bold' },
   loadingContainer: { marginTop: 30, alignItems: 'center' },
+  lottieAnimation: { width: 150, height: 150 }, // Si se usara en otro lado
   lottieLoading: { width: 150, height: 150 },
   resultContainer: { marginTop: 20 },
   resultsLabel: { fontSize: 16, fontWeight: '600', color: themeColors.icon, marginBottom: 10, fontFamily: 'Montserrat-SemiBold' },
