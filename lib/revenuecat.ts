@@ -7,7 +7,7 @@ import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 
 const API_KEYS = {
   google: 'goog_hYhrIPKEIXHjqCydMEetJANwOpY', 
-  apple: '', 
+  apple: 'appl_PLYNeJdwQMQUdEqTwQNPiVyIRMr', 
   /// Clave de prueba (solo para desarrollo, si la necesitas en el futuro)
   test: 'test_hWpizedMvevsKewEprjxiQLtjzl',
 };

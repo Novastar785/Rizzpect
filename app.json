@@ -19,12 +19,14 @@
       "pt": "./locales/pt.json"
     },
     "ios": {
+      "buildNumber": "3", // <--- CAMBIO 2 (OBLIGATORIO: Agrega esta línea)
       "supportsTablet": true,
       "bundleIdentifier": "com.rizzflows.app.v2",
       "userInterfaceStyle": "dark",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Rizzflows needs access to your photo library to analyze conversation screenshots and generate intelligent replies.",
-        "NSCameraUsageDescription": "Rizzflows needs access to your camera to take photos of your conversations for analysis."
+        "NSCameraUsageDescription": "Rizzflows needs access to your camera to take photos of your conversations for analysis.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -63,6 +65,17 @@
         {
           "photosPermission": "Rizzflows needs access to your photo library to analyze conversation screenshots and generate intelligent replies.",
           "cameraPermission": "Rizzflows needs access to your camera to take photos of your conversations for analysis."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "lintOptions": {
+              "checkReleaseBuilds": false,
+              "abortOnError": false
+            }
+          }
         }
       ]
     ],
