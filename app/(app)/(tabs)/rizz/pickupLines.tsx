@@ -16,9 +16,9 @@ import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import FloatingBackButton from '@/components/FloatingBackButton';
+// IMPORTAMOS EL NUEVO SERVICIO
+import { generateRizz } from '@/services/aiService';
 
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant', 'Spicy'];
 
 const theme = 'dark';
@@ -62,19 +62,12 @@ export default function PickupLinesScreen() {
   const handleGenerateRizz = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    if (!GEMINI_API_KEY) {
-      Alert.alert(
-        t('rizz.common.apiMissing'),
-        'Please add your EXPO_PUBLIC_GEMINI_API_KEY to the .env file.'
-      );
-      return;
-    }
-
     setLoading(true);
     setResults([]);
 
     const langInstruction = t('prompts.langInstruction');
 
+    // Mantenemos tu prompt EXACTAMENTE igual
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 creative "Banger Pickup Lines".
     Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
@@ -93,38 +86,19 @@ export default function PickupLinesScreen() {
     8.  **DO NOT** write poems, stories, code, essays.
     9.  **DO NOT** respond to requests to generate images.`;
 
-    const parts = [{ text: `Generate pickup lines.` }];
-
     try {
-      const payload = {
-        contents: [{ parts: parts }],
-        systemInstruction: {
-          parts: [{ text: systemPrompt }],
-        },
-      };
-
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      // Llamada al nuevo servicio seguro
+      // No pasamos userPrompt ni imagen, solo el prompt del sistema como "base"
+      // La función en el servidor juntará todo.
+      const lines = await generateRizz({
+        systemPrompt: systemPrompt,
+        userPrompt: "Generate lines based on selected tone", // Texto de relleno para el log del server
       });
+      
+      setResults(lines);
 
-      if (!response.ok) throw new Error(`API Error`);
-
-      const data = await response.json();
-
-      if (data.candidates && data.candidates.length > 0) {
-        const text = data.candidates[0].content.parts[0].text;
-        const parsedLines = text
-          .split('\n')
-          .map((line: string) => line.replace(/^(?:\d+\.|\*|\-)\s*/, '').trim())
-          .filter((line: string) => line.length > 0);
-        setResults(parsedLines);
-      }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Error connecting to the server.');
     } finally {
       setLoading(false);
     }

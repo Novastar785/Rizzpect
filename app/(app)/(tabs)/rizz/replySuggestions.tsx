@@ -22,13 +22,13 @@ import * as Haptics from 'expo-haptics';
 import LottieView from 'lottie-react-native';
 import { useTranslation } from 'react-i18next';
 import FloatingBackButton from '@/components/FloatingBackButton';
+// IMPORTAMOS EL NUEVO SERVICIO
+import { generateRizz } from '@/services/aiService';
 
 LogBox.ignoreLogs([
   '[expo-image-picker] `ImagePicker.MediaTypeOptions` have been deprecated',
 ]);
 
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 const MAX_PROMPT_LENGTH = 600;
 const TONES = ['Casual', 'Flirty', 'Playful', 'Non-chalant', 'Spicy'];
 
@@ -101,11 +101,6 @@ export default function ReplySuggestionsScreen() {
     Keyboard.dismiss();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    if (!GEMINI_API_KEY) {
-      Alert.alert(t('rizz.common.apiMissing'), 'Check .env');
-      return;
-    }
-
     if (!prompt.trim() && !selectedImage) {
       Alert.alert(t('rizz.common.inputRequired'));
       return;
@@ -116,6 +111,7 @@ export default function ReplySuggestionsScreen() {
 
     const langInstruction = t('prompts.langInstruction');
 
+    // Mantenemos tu prompt EXACTAMENTE igual
     const systemPrompt = `You are "Rizzflow", a social assistant.
     Your goal is to generate 3-4 witty, clever, or engaging **replies** to a message the user received.
     Your tone MUST be: ${selectedTone === 'Spicy' ? 'sexual and spicy' : selectedTone}.
@@ -135,60 +131,18 @@ export default function ReplySuggestionsScreen() {
     8.  If the user asks for anything other than social advice, you **MUST** politely refuse and redirect them to the app's purpose.
         Example refusal: "My purpose is to help you with social situations, so I can't help with that. Let's focus on the situation!"`;
 
-    const parts = [];
-
-    if (prompt.trim()) {
-      parts.push({ text: `Context/Last Message: "${prompt}"` });
-    }
-
-    if (selectedImage) {
-      if (!selectedImage.base64) {
-        setLoading(false);
-        return;
-      }
-      if (!prompt.trim()) {
-        parts.push({
-          text: 'Analyze the last message in this screenshot and give me reply suggestions.',
-        });
-      }
-      parts.push({
-        inlineData: {
-          mimeType: selectedImage.mimeType || 'image/jpeg',
-          data: selectedImage.base64,
-        },
-      });
-    }
-
     try {
-      const payload = {
-        contents: [{ parts: parts }],
-        systemInstruction: {
-          parts: [{ text: systemPrompt }],
-        },
-      };
-
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      // Llamada al nuevo servicio seguro
+      const lines = await generateRizz({
+        systemPrompt: systemPrompt,
+        userPrompt: prompt,
+        imageBase64: selectedImage?.base64 || null
       });
+      
+      setResults(lines);
 
-      if (!response.ok) throw new Error(`API Error`);
-
-      const data = await response.json();
-
-      if (data.candidates && data.candidates.length > 0) {
-        const text = data.candidates[0].content.parts[0].text;
-        const parsedLines = text
-          .split('\n')
-          .map((line: string) => line.replace(/^(?:\d+\.|\*|\-)\s*/, '').trim())
-          .filter((line: string) => line.length > 0);
-        setResults(parsedLines);
-      }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Error connecting to the server.');
     } finally {
       setLoading(false);
     }
