@@ -2,7 +2,7 @@
   "expo": {
     "name": "Rizzflows",
     "slug": "rizzflow",
-    "version": "1.0.3",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rizzflow",
@@ -13,10 +13,19 @@
       "resizeMode": "contain",
       "backgroundColor": "#121212"
     },
+    "locales": {
+      "en": "./locales/en.json",
+      "es": "./locales/es.json",
+      "pt": "./locales/pt.json"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rizzflows.app",
-      "userInterfaceStyle": "dark"
+      "bundleIdentifier": "com.rizzflows.app.v2",
+      "userInterfaceStyle": "dark",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Rizzflows needs access to your photo library to analyze conversation screenshots and generate intelligent replies.",
+        "NSCameraUsageDescription": "Rizzflows needs access to your camera to take photos of your conversations for analysis."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,11 +37,17 @@
         "resizeMode": "contain",
         "backgroundColor": "#121212"
       },
-      "versionCode": 9,
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.rizzflows.app",
-      "userInterfaceStyle": "dark"
+      "package": "com.rizzflows.app.v2",
+      "userInterfaceStyle": "dark",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -42,7 +57,14 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Rizzflows needs access to your photo library to analyze conversation screenshots and generate intelligent replies.",
+          "cameraPermission": "Rizzflows needs access to your camera to take photos of your conversations for analysis."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -50,7 +72,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "665cd530-ae3b-46fb-a3b9-ba012154b418"
+        "projectId": "c512c365-7e0c-4eb2-b4a0-920f026d14ae"
       }
     }
   }

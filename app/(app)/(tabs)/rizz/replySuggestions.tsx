@@ -74,10 +74,11 @@ export default function ReplySuggestionsScreen() {
       return;
     }
 
+    // CAMBIO 3: Reducimos calidad
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.8,
+      allowsEditing: true, // Importante para reducir tamaño
+      quality: 0.4,       // Suficiente para IA
       base64: true,
     });
 

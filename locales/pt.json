@@ -1,0 +1,5 @@
+{
+  "NSPhotoLibraryUsageDescription": "O Rizzflows precisa de acesso à sua biblioteca de fotos para analisar capturas de tela de conversas e gerar respostas inteligentes.",
+  "NSCameraUsageDescription": "O Rizzflows precisa de acesso à sua câmera para tirar fotos de suas conversas para análise.",
+  "NSMicrophoneUsageDescription": "O Rizzflows precisa de acesso ao microfone para recursos de vídeo."
+}

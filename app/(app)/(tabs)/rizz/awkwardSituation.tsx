@@ -74,10 +74,11 @@ export default function AwkwardSituationScreen() {
       return;
     }
 
+    // CAMBIO 3: Reducción de calidad
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.8,
+      allowsEditing: true,
+      quality: 0.4, 
       base64: true,
     });
 

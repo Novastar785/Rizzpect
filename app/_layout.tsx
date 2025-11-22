@@ -23,7 +23,8 @@ const appTheme = Colors.dark;
 SplashScreen.preventAutoHideAsync();
 
 // --- CONFIGURACIÓN DE MODO PRUEBA ---
-const IS_DEV_MODE = true; 
+// CAMBIO 1: Desactivamos el modo desarrollo para producción
+const IS_DEV_MODE = false; 
 // ------------------------------------
 
 export default function RootLayout() {

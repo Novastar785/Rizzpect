@@ -166,5 +166,14 @@
       "h9": "9. Contact Us",
       "p9": "If you have questions about this Privacy Policy, please contact us:"
     }
+  },
+  "paywall": {
+    "reviewerTitle": "Reviewer Mode",
+    "reviewerMsg": "Access granted for review.",
+    "enter": "Enter",
+    "success": "Success",
+    "restored": "Your subscription has been restored.",
+    "notice": "Notice",
+    "noActive": "No active subscriptions found to restore."
   }
 }

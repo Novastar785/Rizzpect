@@ -75,10 +75,11 @@ export default function StartConversationScreen() {
       return;
     }
 
+    // CAMBIO 3: Reducimos calidad para evitar errores de tamaño en el servidor
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.8,
+      allowsEditing: true, // Permitir recorte reduce el área
+      quality: 0.4,       // Compresión agresiva (suficiente para IA)
       base64: true,
     });
 

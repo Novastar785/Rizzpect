@@ -358,7 +358,8 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 [functions.generate-rizz]
 enabled = true
-verify_jwt = true
+# CAMBIO 2: Permite invocar la función con la clave anónima sin token de usuario
+verify_jwt = false
 import_map = "./functions/generate-rizz/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx

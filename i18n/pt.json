@@ -166,5 +166,14 @@
       "h9": "9. Contate-nos",
       "p9": "Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco:"
     }
+  },
+  "paywall": {
+    "reviewerTitle": "Modo Revisor",
+    "reviewerMsg": "Acesso concedido para revisão.",
+    "enter": "Entrar",
+    "success": "Sucesso",
+    "restored": "Sua assinatura foi restaurada.",
+    "notice": "Aviso",
+    "noActive": "Nenhuma assinatura ativa encontrada para restaurar."
   }
 }
