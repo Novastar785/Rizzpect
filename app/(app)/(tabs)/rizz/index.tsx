@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Platform,
   Pressable,
+  PressableStateCallbackType,
+  ViewStyle, // Importamos ViewStyle para ser más explícitos si es necesario
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +19,7 @@ import Animated, {
   withTiming,
   interpolateColor
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient'; // Importamos LinearGradient
+import { LinearGradient } from 'expo-linear-gradient'; 
 
 const neonColors = {
   purple: '#D946EF',
@@ -29,15 +31,67 @@ const neonColors = {
 // Colores para el fondo Premium
 const GRADIENT_COLORS = ['#1a0b2e', '#000000', '#000000'] as const;
 
-// Colores de tarjeta (Transparente por defecto)
-const CARD_BG_DEFAULT = 'transparent'; 
-const CARD_BG_PRESSED = '#111111'; 
+// ===============================================
+// 1. COMPONENTE PARA iOS (Optimizado por fluidez)
+// ===============================================
+const RizzButtonIOS = ({ href, icon, title, color }: { href: string, icon: any, title: string, color: string }) => {
+  // Definimos el estilo base
+  const baseStyle: ViewStyle = {
+    ...styles.cardInner,
+    borderColor: color,
+    ...Platform.select({
+      ios: {
+        shadowColor: color,
+        shadowOpacity: 0.6, 
+        shadowRadius: 12,   
+        shadowOffset: { width: 0, height: 0 }, 
+      }
+    }) as ViewStyle, // Forzamos el tipado de Platform.select
+  };
 
-const RizzButton = ({ href, icon, title, color }: { href: string, icon: any, title: string, color: string }) => {
+  return (
+    <Link href={href as any} asChild>
+      <Pressable
+        style={styles.buttonWrapper}
+      >
+        {({ pressed }: PressableStateCallbackType) => ( // <-- FIX: Retorna un solo objeto fusionado
+          <View style={{
+            ...baseStyle,
+            opacity: pressed ? 0.8 : 1, // Aplica solo la opacidad dinámica
+          }}>
+            <Ionicons
+              name={icon}
+              size={48}
+              color={color}
+              style={{
+                marginBottom: 12,
+                ...Platform.select({
+                  ios: {
+                    textShadowColor: color,
+                    textShadowRadius: 15,
+                  },
+                })
+              }}
+            />
+            <Text style={styles.cardTitle} numberOfLines={2} adjustsFontSizeToFit>
+              {title}
+            </Text>
+          </View>
+        )}
+      </Pressable>
+    </Link>
+  );
+};
+
+// ===============================================
+// 2. COMPONENTE PARA Android (Con animación Reanimated)
+// ===============================================
+const RizzButtonAndroid = ({ href, icon, title, color }: { href: string, icon: any, title: string, color: string }) => {
   const scale = useSharedValue(1);
   const progress = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => {
+    // Restauramos tu animación original de reanimated para Android
     const backgroundColor = interpolateColor(
       progress.value,
       [0, 1],
@@ -52,7 +106,6 @@ const RizzButton = ({ href, icon, title, color }: { href: string, icon: any, tit
       shadowOpacity: 0.6, 
       shadowRadius: 12,   
       shadowOffset: { width: 0, height: 0 }, 
-      elevation: 0, 
     };
   });
 
@@ -73,7 +126,7 @@ const RizzButton = ({ href, icon, title, color }: { href: string, icon: any, tit
         onPressOut={handlePressOut}
         style={styles.buttonWrapper}
       >
-        <Animated.View style={[styles.cardInner, animatedStyle]}>
+        <Animated.View style={[styles.cardInner, animatedStyle, { borderColor: color }]}>
           <Ionicons
             name={icon}
             size={48}
@@ -81,7 +134,7 @@ const RizzButton = ({ href, icon, title, color }: { href: string, icon: any, tit
             style={{
               marginBottom: 12,
               ...Platform.select({
-                ios: {
+                ios: { 
                   textShadowColor: color,
                   textShadowRadius: 15,
                 },
@@ -96,6 +149,11 @@ const RizzButton = ({ href, icon, title, color }: { href: string, icon: any, tit
     </Link>
   );
 };
+
+
+// Seleccionamos el componente a usar
+const RizzButton = Platform.OS === 'ios' ? RizzButtonIOS : RizzButtonAndroid;
+
 
 export default function RizzScreen() {
   const { t } = useTranslation();
@@ -171,7 +229,7 @@ const styles = StyleSheet.create({
     paddingTop: 10, 
     paddingBottom: 20,
     justifyContent: 'center',
-    backgroundColor: 'transparent', // CAMBIO CLAVE ADICIONAL
+    backgroundColor: 'transparent', 
   },
   headerContainer: {
     marginBottom: 30,
@@ -206,11 +264,13 @@ const styles = StyleSheet.create({
     gap: 15,
     backgroundColor: 'transparent',
   },
+  // Contenedor que define el tamaño del botón (47% de ancho, 1:1 aspecto)
   buttonWrapper: {
     width: '47%',
     aspectRatio: 1, 
     marginBottom: 15,
   },
+  // El contenido interno del botón que aplica estilos y feedback
   cardInner: {
     flex: 1,
     backgroundColor: 'transparent', 
@@ -219,11 +279,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10,
-    shadowColor: "transparent", 
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0, 
+    // Aseguramos que la sombra sea solo para iOS ya que en Android usa elevation
+    ...Platform.select({
+        android: {
+            // El estilo de animación en Android se manejará por Animated.View
+            // por lo que las propiedades estáticas van en el contenedor base
+            elevation: 0, // quitamos la elevation si Reanimated la va a manejar
+        },
+        ios: {
+             // La sombra de iOS se aplica en el componente RizzButtonIOS
+        }
+    })
   },
   cardTitle: {
     color: '#FFFFFF',

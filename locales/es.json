@@ -1,5 +1,1 @@
-{
-  "NSPhotoLibraryUsageDescription": "Rizzflows necesita acceso a tu galería para analizar las capturas de pantalla de tus conversaciones y generar respuestas inteligentes.",
-  "NSCameraUsageDescription": "Rizzflows necesita acceso a tu cámara para tomar fotos de tus conversaciones para su análisis.",
-  "NSMicrophoneUsageDescription": "Rizzflows necesita acceso al micrófono para funciones de video."
-}
+{}
