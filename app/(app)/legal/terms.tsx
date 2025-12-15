@@ -28,6 +28,7 @@ export default function TermsScreen() {
         {/* 1. Agreement & Eligibility */}
         <Text style={styles.heading}>{t('legal.terms.h1')}</Text>
         <Text style={styles.paragraph}>{t('legal.terms.p1')}</Text>
+        <Text style={styles.paragraph}>{t('legal.terms.p1_b')}</Text>
         
         <Text style={styles.subHeading}>{t('legal.terms.h1_sub')}</Text>
         <View style={styles.bulletList}>
@@ -36,6 +37,7 @@ export default function TermsScreen() {
             <Text style={styles.bulletItem}>{t('legal.terms.p1_li3')}</Text>
             <Text style={styles.bulletItem}>{t('legal.terms.p1_li4')}</Text>
         </View>
+        <Text style={[styles.paragraph, styles.warningText]}>{t('legal.terms.p1_footer')}</Text>
 
         {/* 2. Services & AI Disclaimer */}
         <Text style={styles.heading}>{t('legal.terms.h2')}</Text>
@@ -52,6 +54,8 @@ export default function TermsScreen() {
             <Text style={styles.bulletItem}>{t('legal.terms.p2_li3')}</Text>
           </View>
         </View>
+        <Text style={styles.paragraph}>{t('legal.terms.p2_footer1')}</Text>
+        <Text style={styles.paragraph}>{t('legal.terms.p2_footer2')}</Text>
 
         {/* 3. Purchases & Payments */}
         <Text style={styles.heading}>{t('legal.terms.h3')}</Text>
@@ -137,6 +141,7 @@ export default function TermsScreen() {
         {/* 17. Miscellaneous */}
         <Text style={styles.heading}>{t('legal.terms.h17')}</Text>
         <Text style={styles.paragraph}>{t('legal.terms.p17')}</Text>
+        <Text style={[styles.paragraph, styles.bold]}>{t('legal.terms.p17_california')}</Text>
 
         {/* 18. Contact */}
         <Text style={styles.heading}>{t('legal.terms.h18')}</Text>
@@ -194,6 +199,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: themeColors.icon,
     marginBottom: 16,
+  },
+  warningText: {
+    color: themeColors.accentRed || '#FF3B30',
+    fontStyle: 'italic',
   },
   bold: {
     fontWeight: 'bold',

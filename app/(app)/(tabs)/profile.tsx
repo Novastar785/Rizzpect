@@ -1,4 +1,4 @@
-import { StyleSheet, Pressable, Alert, View } from 'react-native';
+import { StyleSheet, Pressable, Alert, View, ScrollView } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,7 +44,10 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.container} 
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.profileHeader}>
             <View style={styles.avatar}>
                <Ionicons name="person" size={40} color={themeColors.tint} />
@@ -86,14 +89,15 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/(app)/legal/privacy')} 
             />
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: themeColors.background },
-  container: { flex: 1, padding: 20 },
+  // Se eliminó 'flex: 1' y se añadió paddingBottom extra para evitar cortes
+  container: { padding: 20, paddingBottom: 40 },
   profileHeader: { alignItems: 'center', marginBottom: 30, marginTop: 10 },
   avatar: {
     width: 80, height: 80, borderRadius: 40,
